@@ -37,6 +37,13 @@ main() {
  
  	#gradle
  	apt install gradle
+
+	#git
+	git clone https://www.github.com/diamond2sword/termux-fun
+	cp -rf ~/termux-fun/project ~/termux-fun/install-setup.bash $HOME
+	apt install expect
+	apt install openssh
+
 }
 
 VIMRC=$(cat << "EOF"
