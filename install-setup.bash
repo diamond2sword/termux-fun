@@ -3,16 +3,22 @@
 main() {
  	apt update
  	apt upgrade
+	apt update
+
+ 	#man pages
+ 	apt install man
+
+	#termux-api
+	apt install termux-api
  
  	#vim
-	apt install termux
  	apt install vim
  	curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
  	apt install fzf
  	apt install nodejs
+	apt install git
 	echo "$VIMRC" > ~/.vimrc
  	vi +'PlugInstall --sync' +'PlugClean' +qa
- 	vi +'CocInstall -sync coc-sh coc-json' +qa
  	apt install bat
  	echo "$COC_CONFIG" > ~/.vim/coc-settings.json
  	apt install unzip
@@ -21,9 +27,6 @@ main() {
  	mkdir -p ~/lsp/kotlin
  	cp -rf server ~/lsp/kotlin
  	rm -rf server server.zip
- 
- 	#man pages
- 	apt install man
  
  	#zsh
  	apt install zsh
@@ -53,6 +56,8 @@ Plug 'udalov/kotlin-vim'
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
+Plug 'neoclide/coc-git'
+Plug 'neoclide/coc-sh'
 Plug 'josa42/vim-lightline-coc'
 Plug 'itchyny/lightline.vim'
 call plug#end()
