@@ -19,6 +19,7 @@ main() {
 	apt install git
 	echo "$VIMRC" > ~/.vimrc
  	vi +'PlugInstall --sync' +'PlugClean' +qa
+	vi +'CocInstall -sync coc-git coc-sh' +qa
  	apt install bat
  	echo "$COC_CONFIG" > ~/.vim/coc-settings.json
  	apt install unzip
@@ -56,8 +57,6 @@ Plug 'udalov/kotlin-vim'
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
-Plug 'neoclide/coc-git'
-Plug 'neoclide/coc-sh'
 Plug 'josa42/vim-lightline-coc'
 Plug 'itchyny/lightline.vim'
 call plug#end()
