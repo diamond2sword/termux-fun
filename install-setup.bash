@@ -1,53 +1,67 @@
 #!/bin/bash
 
-main() {
- 	apt update
- 	apt upgrade
-	apt update
+main() { 
+	yes | {
+		apt update
+		apt upgrade
+		apt update
 
- 	#man pages
- 	apt install man
+		#man pages
+		apt install man
 
-	#termux-api
-	apt install termux-api
- 
- 	#vim
- 	apt install vim
- 	curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
- 	apt install fzf
- 	apt install nodejs
-	apt install git
-	echo "$VIMRC" > ~/.vimrc
- 	vi +'PlugInstall --sync' +'PlugClean' +qa
-	vi +'CocInstall -sync coc-git coc-sh' +qa
- 	apt install bat
- 	echo "$COC_CONFIG" > ~/.vim/coc-settings.json
- 	apt install unzip
- 	curl -LJO https://github.com/fwcd/kotlin-language-server/releases/download/1.3.6/server.zip
- 	unzip server.zip
- 	mkdir -p ~/lsp/kotlin
- 	cp -rf server ~/lsp/kotlin
- 	rm -rf server server.zip
- 
- 	#zsh
- 	apt install zsh
- 	sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"	
- 	git clone --depth=1 https://github.com/mattmc3/antidote.git ${ZDOTDIR:-$HOME}/.antidote
-	echo "$ZSH_PLUGINS_TXT" > ~/.zsh_plugins.txt
- 	echo "$ZSHRC_CUSTOM" > ~/.zshrc_custom
-	sed -i '/\#ZSHRC_CUSTOM/d' ~/.zshrc
-	echo 'source ~/.zshrc_custom #ZSHRC_CUSTOM' >> ~/.zshrc	
- 	chsh -s zsh
- 
- 	#gradle
- 	apt install gradle
+		#termux-api
+		apt install termux-api
+	 
+		#vim
+		apt install vim
+		curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+		apt install fzf
+		apt install nodejs
+		apt install git
+		echo "$VIMRC" > ~/.vimrc
+		vi +'PlugInstall --sync' +'PlugClean' +qa
+		vi +'CocInstall -sync coc-git coc-sh' +qa
+		apt install bat
+		echo "$COC_CONFIG" > ~/.vim/coc-settings.json
+		apt install unzip
+		curl -LJO https://github.com/fwcd/kotlin-language-server/releases/download/1.3.6/server.zip
+		unzip server.zip
+		mkdir -p ~/lsp/kotlin
+		cp -rf server ~/lsp/kotlin
+		rm -rf server server.zip
+	 
+		#zsh
+		apt install zsh
+		sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"	
+		git clone --depth=1 https://github.com/mattmc3/antidote.git ${ZDOTDIR:-$HOME}/.antidote
+		echo "$ZSH_PLUGINS_TXT" > ~/.zsh_plugins.txt
+		echo "$ZSHRC_CUSTOM" > ~/.zshrc_custom
+		sed -i '/\#ZSHRC_CUSTOM/d' ~/.zshrc
+		echo 'source ~/.zshrc_custom #ZSHRC_CUSTOM' >> ~/.zshrc	
 
-	#git
-	git clone https://www.github.com/diamond2sword/termux-fun
-	cp -rf ~/termux-fun/project ~/termux-fun/install-setup.bash $HOME
-	apt install expect
-	apt install openssh
+		#https://github.com/andrewferrier/fzf-z#pre-requisites
+		FZFZ_SCRIPT_PATH=~/.cache/antidote/https-COLON--SLASH--SLASH-github.com-SLASH-andrewferrier-SLASH-fzf-z
+		mkdir -p $FZFZ_SCRIPT_PATH
+		curl https://raw.githubusercontent.com/rupa/z/master/z.sh > "$FZFZ_SCRIPT_PATH/z.sh"
+	 
+		#gradle
+		apt install gradle
 
+		#git
+		git clone https://www.github.com/diamond2sword/termux-fun
+		cp -rf ~/termux-fun/project ~/termux-fun/install-setup.bash $HOME
+		apt install expect
+		apt install openssh
+
+		#gradle needs internet
+		cd project
+		gradle run
+	}	
+	#because antidote has to install plugins for zsh
+	
+	chsh -s zsh
+	echo "sed -i '/\#FIRST_START/d' ~/.zshrc; exit #FIRST_START" >> ~/.zshrc
+	zsh
 }
 
 VIMRC=$(cat << "EOF"
@@ -152,7 +166,7 @@ zstyle ':completion:*' menu select
 export BAT_THEME=gruvbox-dark
 
 #https://github.com/andrewferrier/fzf-z#customizing-and-options
-export FZFZ_EXTRA_OPTS="--border=sharp --preview-window=border-sharp"
+export FZFZ_EXTRA_OPTS=" --border=sharp --preview-window=border-sharp"
 export FZFZ_SUBDIR_LIMIT=0
 EOF
 )
@@ -160,11 +174,13 @@ EOF
 ZSH_PLUGINS_TXT=$(cat << "EOF"
 zsh-users/zsh-autosuggestions
 
+rupa/z
 agkozak/zsh-z
-andrewferrier/fzf-z
 
 ohmyzsh/ohmyzsh path:plugins/fzf
 ohmyzsh/ohmyzsh path:plugins/git
+
+andrewferrier/fzf-z
 EOF
 )
 
@@ -180,5 +196,5 @@ COC_CONFIG=$(cat << "EOF"
 EOF
 )
 
-yes | main "$@"
+main "$@"
 exit
