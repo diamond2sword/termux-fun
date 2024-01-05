@@ -55,7 +55,7 @@ main() {
 
 		#gradle needs internet
 		cd project
-		gradle run
+		gradle run --offline
 	}	
 	#because antidote has to install plugins for zsh
 	
