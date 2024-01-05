@@ -22,6 +22,7 @@ main() {
 		vi +'PlugInstall --sync' +'PlugClean' +qa
 		vi +'CocInstall -sync coc-git coc-sh' +qa
 		apt install bat
+		#kotlin lsp
 		echo "$COC_CONFIG" > ~/.vim/coc-settings.json
 		apt install unzip
 		curl -LJO https://github.com/fwcd/kotlin-language-server/releases/download/1.3.6/server.zip
@@ -39,10 +40,6 @@ main() {
 		sed -i '/\#ZSHRC_CUSTOM/d' ~/.zshrc
 		echo 'source ~/.zshrc_custom #ZSHRC_CUSTOM' >> ~/.zshrc	
 
-		#https://github.com/andrewferrier/fzf-z#pre-requisites
-		FZFZ_SCRIPT_PATH=~/.cache/antidote/https-COLON--SLASH--SLASH-github.com-SLASH-andrewferrier-SLASH-fzf-z
-		mkdir -p $FZFZ_SCRIPT_PATH
-		curl https://raw.githubusercontent.com/rupa/z/master/z.sh > "$FZFZ_SCRIPT_PATH/z.sh"
 	 
 		#gradle
 		apt install gradle
@@ -56,12 +53,25 @@ main() {
 		#gradle needs internet
 		cd project
 		gradle run --offline
-	}	
+	}
+
 	#because antidote has to install plugins for zsh
-	
 	chsh -s zsh
 	echo "sed -i '/\#FIRST_START/d' ~/.zshrc; exit #FIRST_START" >> ~/.zshrc
 	zsh
+
+	#https://github.com/andrewferrier/fzf-z#pre-requisites
+	export FZFZ_SCRIPT_PATH=~/.cache/antidote/https-COLON--SLASH--SLASH-github.com-SLASH-andrewferrier-SLASH-fzf-z
+	mkdir -p $FZFZ_SCRIPT_PATH
+	curl https://raw.githubusercontent.com/rupa/z/master/z.sh > "$FZFZ_SCRIPT_PATH/z.sh"
+
+	#termux JetBrainsMono font
+	curl -LJO https://download.jetbrains.com/fonts/JetBrainsMono-2.304.zip
+	unzip ~/JetBrainsMono-2.304.zip -d ~/font
+	cp ~/font/fonts/ttf/JetBrainsMono-Regular.ttf ~/.termux/font.ttf
+	rm JetBrainsMono-2.304.zip
+	rm -rf ~/font
+	termux-reload-settings
 }
 
 VIMRC=$(cat << "EOF"
