@@ -60,18 +60,20 @@ main() {
 	echo "sed -i '/\#FIRST_START/d' ~/.zshrc; exit #FIRST_START" >> ~/.zshrc
 	zsh
 
-	#https://github.com/andrewferrier/fzf-z#pre-requisites
-	export FZFZ_SCRIPT_PATH=~/.cache/antidote/https-COLON--SLASH--SLASH-github.com-SLASH-andrewferrier-SLASH-fzf-z
-	mkdir -p $FZFZ_SCRIPT_PATH
-	curl https://raw.githubusercontent.com/rupa/z/master/z.sh > "$FZFZ_SCRIPT_PATH/z.sh"
+	yes | {
+		#https://github.com/andrewferrier/fzf-z#pre-requisites
+		export FZFZ_SCRIPT_PATH=~/.cache/antidote/https-COLON--SLASH--SLASH-github.com-SLASH-andrewferrier-SLASH-fzf-z
+		mkdir -p $FZFZ_SCRIPT_PATH
+		curl https://raw.githubusercontent.com/rupa/z/master/z.sh > "$FZFZ_SCRIPT_PATH/z.sh"
 
-	#termux JetBrainsMono font
-	curl -LJO https://download.jetbrains.com/fonts/JetBrainsMono-2.304.zip
-	unzip ~/JetBrainsMono-2.304.zip -d ~/font
-	cp ~/font/fonts/ttf/JetBrainsMono-Regular.ttf ~/.termux/font.ttf
-	rm JetBrainsMono-2.304.zip
-	rm -rf ~/font
-	termux-reload-settings
+		#termux JetBrainsMono font
+		curl -LJO https://download.jetbrains.com/fonts/JetBrainsMono-2.304.zip
+		unzip ~/JetBrainsMono-2.304.zip -d ~/font
+		cp ~/font/fonts/ttf/JetBrainsMono-Regular.ttf ~/.termux/font.ttf
+		rm JetBrainsMono-2.304.zip
+		rm -rf ~/font
+		termux-reload-settings
+	}
 }
 
 VIMRC=$(cat << "EOF"
