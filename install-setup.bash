@@ -231,44 +231,67 @@ allprojects {
 	}
 }
 
-allprojects {
-	gradle.projectsEvaluated {
-		val cacheDir = file("${gradle.gradleUserHomeDir}/caches/modules-2/files-2.1") // Ang cache ng Gradle na naglalaman ng mga pom file
-		val customRepoDir = file("${gradle.gradleUserHomeDir}/m2") // Ang m2 na folder sa Gradle's home
+val cacheDir = file("${gradle.gradleUserHomeDir}/caches/modules-2/files-2.1") // Ang cache ng Gradle na naglalaman ng mga pom file
+val customRepoDir = file("${gradle.gradleUserHomeDir}/m2") // Ang m2 na folder sa Gradle's home
+val excludedFiletypes = listOf(".module")
 
-		println("cacheToRepo task is called.")
-		println("cacheDir: $cacheDir")
-		println("customRepoDir: $customRepoDir")
+var verbose = false
 
-		cacheDir.walkTopDown().forEach { file ->
-			if (file.isFile) {
-				val relativePath = file.relativeTo(cacheDir).path
-				val pathComponents = relativePath.split('/')
+fun printVerbose(string: String) = when (verbose) {
+	true -> println(string)
+	false -> Unit
+}
+fun askUser(question: String) : Boolean {
+	println("$question (yes/no)")
+	return readLine()?.equals("yes", ignoreCase = true) ?: false
+}
+fun cacheToRepo() {
+	if (askUser("Skip cacheToRepo()?")) return
+	verbose = askUser("must be verbose?")
 
-				val longPath = pathComponents[0].replace(".", "/")
-				val name = pathComponents[1]
-				val version = pathComponents[2]
+	printVerbose("cacheToRepo task is called.")
+	printVerbose("cacheDir: $cacheDir")
+	printVerbose("customRepoDir: $customRepoDir")
 
-				println("File: ${file.name} - It's a file.")
-				println("\tRelative path: $relativePath")
-				println("\tlongPath: $longPath")
-				println("\tname: $name")
-				println("\tversion: $version")
+	cacheDir.walkTopDown().forEach { file ->
+		if (!file.isFile) {
+			printVerbose("File: ${file.name} - It's not a file.")
+			return@forEach
+		}
+		printVerbose("File: ${file.name} - It's a file.")
+		
+		excludedFiletypes.forEach loop2@ { filetype ->
+			if (!file.name.endsWith(filetype)) return@loop2
+			printVerbose("File: ${file.name} - Excluded Filetype: ${filetype}")
+			return@forEach
+		}
 
-				try {
-					copy {
-						from(file)
-						into(customRepoDir.toPath().resolve("$longPath/$name/$version"))
-					}
-					println("Successfully copied ${file.name}.")
-				} catch (e: Exception) {
-					println("Failed to copy ${file.name}. Reason: ${e.message}")
-				}
-			} else {
-				println("File: ${file.name} - It's not a file.")
+		val relativePath = file.relativeTo(cacheDir).path
+		val pathComponents = relativePath.split('/')
+
+		val longPath = pathComponents[0].replace(".", "/")
+		val name = pathComponents[1]
+		val version = pathComponents[2]
+
+		printVerbose("\tRelative path: $relativePath")
+		printVerbose("\tlongPath: $longPath")
+		printVerbose("\tname: $name")
+		printVerbose("\tversion: $version")
+	
+		try {
+			copy {
+				from(file)
+				into(customRepoDir.toPath().resolve("$longPath/$name/$version"))
 			}
+			printVerbose("Successfully copied ${file.name}.")
+		} catch (e: Exception) {
+			printVerbose("Failed to copy ${file.name}. Reason: ${e.message}")
 		}
 	}
+}
+
+gradle.projectsEvaluated {
+	cacheToRepo()
 }
 
 
