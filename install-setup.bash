@@ -2,78 +2,79 @@
 
 main() { 
 	yes | {
-		apt update
-		apt upgrade
-		apt update
-
-		#man pages
-		apt install man
-
-		#termux-api
-		apt install termux-api
-	 
-		#vim
-		apt install vim
-		curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-		apt install fzf
-		apt install nodejs
-		apt install git
+#		apt update
+#		apt upgrade
+#		apt update
+#
+#		#man pages
+#		apt install man
+#
+#		#termux-api
+#		apt install termux-api
+#	 
+#		#vim
+#		apt install vim
+#		curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+#		apt install fzf
+#		apt install nodejs
+#		apt install git
 		echo "$VIMRC" > ~/.vimrc
-		vi +'PlugInstall --sync' +'PlugClean' +qa
-		vi +'CocInstall -sync coc-git coc-sh' +qa
-		apt install bat
-		#kotlin lsp
+#		vi +'PlugInstall --sync' +'PlugClean' +qa
+#		vi +'CocInstall -sync coc-git coc-sh' +qa
+#		apt install bat
+#		#kotlin lsp
 		echo "$COC_CONFIG" > ~/.vim/coc-settings.json
-		apt install unzip
-		curl -LJO https://github.com/fwcd/kotlin-language-server/releases/download/1.3.6/server.zip
-		unzip server.zip
-		mkdir -p ~/lsp/kotlin
-		cp -rf server ~/lsp/kotlin
-		rm -rf server server.zip
-	 
-		#zsh
-		apt install zsh
-		sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"	
-		git clone --depth=1 https://github.com/mattmc3/antidote.git ${ZDOTDIR:-$HOME}/.antidote
+#		apt install unzip
+#		curl -LJO https://github.com/fwcd/kotlin-language-server/releases/download/1.3.6/server.zip
+#		unzip server.zip
+#		mkdir -p ~/lsp/kotlin
+#		cp -rf server ~/lsp/kotlin
+#		rm -rf server server.zip
+#	 
+#		#zsh
+#		apt install zsh
+#		sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"	
+#		git clone --depth=1 https://github.com/mattmc3/antidote.git ${ZDOTDIR:-$HOME}/.antidote
 		echo "$ZSH_PLUGINS_TXT" > ~/.zsh_plugins.txt
 		echo "$ZSHRC_CUSTOM" > ~/.zshrc_custom
 		sed -i '/\#ZSHRC_CUSTOM/d' ~/.zshrc
 		echo 'source ~/.zshrc_custom #ZSHRC_CUSTOM' >> ~/.zshrc	
-
-	 
-		#gradle
-		apt install gradle
-
-		#git
-		git clone https://www.github.com/diamond2sword/termux-fun
-		cp -rf ~/termux-fun/project ~/termux-fun/install-setup.bash $HOME
-		apt install expect
-		apt install openssh
-
-		#gradle needs internet
-		cd project
-		gradle run --offline
+#
+#	 
+#		#gradle
+#		apt install gradleCacheDir
+		echo "$OFFLINE_INIT_GRADLE_KTS" > ~/.gradle/init.d/offline.init.gradle.kts
+#
+#		#git
+#		git clone https://www.github.com/diamond2sword/termux-fun
+#		cp -rf ~/termux-fun/project ~/termux-fun/install-setup.bash $HOME
+#		apt install expect
+#		apt install openssh
+#
+#		#gradle needs internet
+#		cd project
+#		gradle run --offline
 	}
 
-	#because antidote has to install plugins for zsh
-	chsh -s zsh
-	echo "sed -i '/\#FIRST_START/d' ~/.zshrc; exit #FIRST_START" >> ~/.zshrc
-	zsh
+#	#because antidote has to install plugins for zsh
+#	chsh -s zsh
+#	echo "sed -i '/\#FIRST_START/d' ~/.zshrc; exit #FIRST_START" >> ~/.zshrc
+#	zsh
 
-	yes | {
-		#https://github.com/andrewferrier/fzf-z#pre-requisites
-		export FZFZ_SCRIPT_PATH=~/.cache/antidote/https-COLON--SLASH--SLASH-github.com-SLASH-andrewferrier-SLASH-fzf-z
-		mkdir -p $FZFZ_SCRIPT_PATH
-		curl https://raw.githubusercontent.com/rupa/z/master/z.sh > "$FZFZ_SCRIPT_PATH/z.sh"
-
-		#termux JetBrainsMono font
-		curl -LJO https://download.jetbrains.com/fonts/JetBrainsMono-2.304.zip
-		unzip ~/JetBrainsMono-2.304.zip -d ~/font
-		cp ~/font/fonts/ttf/JetBrainsMono-Regular.ttf ~/.termux/font.ttf
-		rm JetBrainsMono-2.304.zip
-		rm -rf ~/font
-		termux-reload-settings
-	}
+#	yes | {
+#		#https://github.com/andrewferrier/fzf-z#pre-requisites
+#		export FZFZ_SCRIPT_PATH=~/.cache/antidote/https-COLON--SLASH--SLASH-github.com-SLASH-andrewferrier-SLASH-fzf-z
+#		mkdir -p $FZFZ_SCRIPT_PATH
+#		curl https://raw.githubusercontent.com/rupa/z/master/z.sh > "$FZFZ_SCRIPT_PATH/z.sh"
+#
+#		#termux JetBrainsMono font
+#		curl -LJO https://download.jetbrains.com/fonts/JetBrainsMono-2.304.zip
+#		unzip ~/JetBrainsMono-2.304.zip -d ~/font
+#		cp ~/font/fonts/ttf/JetBrainsMono-Regular.ttf ~/.termux/font.ttf
+#		rm JetBrainsMono-2.304.zip
+#		rm -rf ~/font
+#		termux-reload-settings
+#	}
 }
 
 VIMRC=$(cat << "EOF"
@@ -205,6 +206,72 @@ COC_CONFIG=$(cat << "EOF"
 	  }
 	}
 }
+EOF
+)
+
+OFFLINE_INIT_GRADLE_KTS=$(cat << "EOF"
+val reposDir = gradle.getGradleUserHomeDir().resolve("repos")
+val repoDir = reposDir.resolve("m2")
+repoDir.mkdirs()
+val repos = reposDir.listFiles()?.sorted()                                                           
+fun RepositoryHandler.addRepos(repositories: List<File>?) {
+	repositories?.forEach { repo ->
+		maven {    
+			name = "injected_offline_${repo.name}"
+			url = repo.toURI()
+		}
+	}
+}
+
+allprojects {
+	repositories.addRepos(listOf(reposDir))
+	buildscript.repositories.addRepos(listOf(reposDir))
+	settingsEvaluated {
+		pluginManagement.repositories.addRepos(repos)
+	}
+}
+
+allprojects {
+	gradle.projectsEvaluated {
+		val cacheDir = file("${gradle.gradleUserHomeDir}/caches/modules-2/files-2.1") // Ang cache ng Gradle na naglalaman ng mga pom file
+		val customRepoDir = file("${gradle.gradleUserHomeDir}/m2") // Ang m2 na folder sa Gradle's home
+
+		println("cacheToRepo task is called.")
+		println("cacheDir: $cacheDir")
+		println("customRepoDir: $customRepoDir")
+
+		cacheDir.walkTopDown().forEach { file ->
+			if (file.isFile) {
+				val relativePath = file.relativeTo(cacheDir).path
+				val pathComponents = relativePath.split('/')
+
+				val longPath = pathComponents[0].replace(".", "/")
+				val name = pathComponents[1]
+				val version = pathComponents[2]
+
+				println("File: ${file.name} - It's a file.")
+				println("\tRelative path: $relativePath")
+				println("\tlongPath: $longPath")
+				println("\tname: $name")
+				println("\tversion: $version")
+
+				try {
+					copy {
+						from(file)
+						into(customRepoDir.toPath().resolve("$longPath/$name/$version"))
+					}
+					println("Successfully copied ${file.name}.")
+				} catch (e: Exception) {
+					println("Failed to copy ${file.name}. Reason: ${e.message}")
+				}
+			} else {
+				println("File: ${file.name} - It's not a file.")
+			}
+		}
+	}
+}
+
+
 EOF
 )
 
