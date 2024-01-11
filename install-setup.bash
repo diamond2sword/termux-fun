@@ -16,6 +16,7 @@ main() {
 #		apt install vim
 #		curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 #		apt install fzf
+#       apt install tree
 #		apt install nodejs
 #		apt install git
 		echo "$VIMRC" > ~/.vimrc
@@ -167,7 +168,7 @@ zsh_plugins=${ZDOTDIR:-~}/.zsh_plugins.zsh
 fpath+=(${ZDOTDIR:-~}/.antidote)
 autoload -Uz $fpath[-1]/antidote
 if [[ ! $zsh_plugins -nt ${zsh_plugins:r}.txt ]]; then
-  (antidote bundle <${zsh_plugins:r}.txt >|$zsh_plugins)
+	(antidote bundle <${zsh_plugins:r}.txt >|$zsh_plugins)
 fi
 source $zsh_plugins
 
@@ -200,10 +201,10 @@ EOF
 COC_CONFIG=$(cat << "EOF"
 {
 	"languageserver": {
-	  "kotlin": {
-	    "command": "~/lsp/kotlin/server/bin/kotlin-language-server",
-	    "filetypes": ["kotlin"]
-	  }
+		"kotlin": {
+		    "command": "~/lsp/kotlin/server/bin/kotlin-language-server",
+	    	"filetypes": ["kotlin"]
+		}
 	}
 }
 EOF
@@ -213,27 +214,28 @@ OFFLINE_INIT_GRADLE_KTS=$(cat << "EOF"
 val reposDir = gradle.getGradleUserHomeDir().resolve("repos")
 val repoDir = reposDir.resolve("m2")
 repoDir.mkdirs()
-val repos = reposDir.listFiles()?.sorted()                                                           
-fun RepositoryHandler.addRepos(repositories: List<File>?) {
-	repositories?.forEach { repo ->
-		maven {    
-			name = "injected_offline_${repo.name}"
-			url = repo.toURI()
-		}
+val repos = reposDir.listFiles().toList()
+
+fun RepositoryHandler.addRepos(repos: List<File>?) = maven {
+	repos?.forEach { repo ->
+		setUrl(repo.toURI())
 	}
 }
 
 allprojects {
-	repositories.addRepos(listOf(reposDir))
-	buildscript.repositories.addRepos(listOf(reposDir))
-	settingsEvaluated {
-		pluginManagement.repositories.addRepos(repos)
-	}
+	repositories.addRepos(repos)
+	buildscript.repositories.addRepos(repos)
 }
+beforeSettings {
+	pluginManagement.repositories.addRepos(listOf(repoDir))
+}
+
 
 val cacheDir = file("${gradle.gradleUserHomeDir}/caches/modules-2/files-2.1") // Ang cache ng Gradle na naglalaman ng mga pom file
 val customRepoDir = file("${gradle.gradleUserHomeDir}/m2") // Ang m2 na folder sa Gradle's home
+
 val excludedFiletypes = listOf(".module")
+val includedFiletypes = listOf(".jar", ".pom")
 
 var verbose = false
 
@@ -248,10 +250,9 @@ fun askUser(question: String) : Boolean {
 fun cacheToRepo() {
 	if (askUser("Skip cacheToRepo()?")) return
 	verbose = askUser("must be verbose?")
-
-	printVerbose("cacheToRepo task is called.")
-	printVerbose("cacheDir: $cacheDir")
-	printVerbose("customRepoDir: $customRepoDir")
+	println("cacheToRepo task is called.")
+	println("cacheDir: $cacheDir")
+	println("customRepoDir: $customRepoDir")
 
 	cacheDir.walkTopDown().forEach { file ->
 		if (!file.isFile) {
@@ -265,6 +266,17 @@ fun cacheToRepo() {
 			printVerbose("File: ${file.name} - Excluded Filetype: ${filetype}")
 			return@forEach
 		}
+		
+		var isFiletypeIncluded = false
+		for (filetype in includedFiletypes) {
+			if (!file.name.endsWith(filetype)) continue
+			isFiletypeIncluded = true
+			break
+		}
+		if (!isFiletypeIncluded) {
+			printVerbose("File: ${file.name} - Not in Included Filetypes: ${includedFiletypes.toString()}")
+			if (!askUser("Do you want to copy this file?")) return@forEach
+		}
 
 		val relativePath = file.relativeTo(cacheDir).path
 		val pathComponents = relativePath.split('/')
@@ -277,15 +289,18 @@ fun cacheToRepo() {
 		printVerbose("\tlongPath: $longPath")
 		printVerbose("\tname: $name")
 		printVerbose("\tversion: $version")
-	
-		try {
-			copy {
-				from(file)
-				into(customRepoDir.toPath().resolve("$longPath/$name/$version"))
+		while (true) {	
+			try {
+				copy {
+					from(file)
+					into(customRepoDir.toPath().resolve("$longPath/$name/$version"))
+				}
+				printVerbose("Successfully copied ${file.name}.")
+				break
+			} catch (e: Exception) {
+				printVerbose("Failed to copy ${file.name}. Reason: ${e.message}")
+				if (askUser("Skip copying this one?")) break
 			}
-			printVerbose("Successfully copied ${file.name}.")
-		} catch (e: Exception) {
-			printVerbose("Failed to copy ${file.name}. Reason: ${e.message}")
 		}
 	}
 }
