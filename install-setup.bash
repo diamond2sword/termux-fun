@@ -39,23 +39,21 @@ main() {
 		echo "$ZSH_PLUGINS_TXT" > ~/.zsh_plugins.txt
 		echo "$ZSHRC_CUSTOM" > ~/.zshrc_custom
 		sed -i '/\#ZSHRC_CUSTOM/d' ~/.zshrc
-		echo 'source ~/.zshrc_custom #ZSHRC_CUSTOM' >> ~/.zshrc	
-#
-#	 
-#		#gradle
-#		apt install gradleCacheDir
-		echo "$OFFLINE_INIT_GRADLE_KTS" > ~/.gradle/init.d/offline.init.gradle.kts
+		echo 'source ~/.zshrc_custom #ZSHRC_CUSTOM' >> ~/.zshrc 
 #
 #		#git
 #		git clone https://www.github.com/diamond2sword/termux-fun
 #		cp -rf ~/termux-fun/project ~/termux-fun/install-setup.bash $HOME
 #		apt install expect
 #		apt install openssh
-#
+
+#		#gradle
+#		apt install gradle
+		echo "$OFFLINE_INIT_GRADLE_KTS" > ~/.gradle/init.d/offline.init.gradle.kts
 #		#gradle needs internet
 #		cd project
-#		gradle run --offline
-	}
+#		gradle build --offline
+}
 
 #	#because antidote has to install plugins for zsh
 #	chsh -s zsh
@@ -211,10 +209,27 @@ EOF
 )
 
 OFFLINE_INIT_GRADLE_KTS=$(cat << "EOF"
-val reposDir = gradle.getGradleUserHomeDir().resolve("repos")
-val repoDir = reposDir.resolve("m2")
-repoDir.mkdirs()
-val repos = reposDir.listFiles().toList()
+fun main() {
+	addLocalRepo()
+	projectsEvaluated {
+		cacheToRepo()
+	}
+	apply(plugin = "kotlin")
+}
+
+fun addLocalRepo() {
+	val reposDir = gradle.getGradleUserHomeDir().resolve("repos")
+	val repoDir = reposDir.resolve("m2")
+	repoDir.mkdirs()
+	val repos = reposDir.listFiles().toList()
+	beforeSettings {
+		pluginManagement.repositories.addRepos(listOf(repoDir))
+	}
+	allprojects {
+		repositories.addRepos(repos)
+		buildscript.repositories.addRepos(repos)
+	}
+}
 
 fun RepositoryHandler.addRepos(repos: List<File>?) = maven {
 	repos?.forEach { repo ->
@@ -222,34 +237,26 @@ fun RepositoryHandler.addRepos(repos: List<File>?) = maven {
 	}
 }
 
-allprojects {
-	repositories.addRepos(repos)
-	buildscript.repositories.addRepos(repos)
-}
-beforeSettings {
-	pluginManagement.repositories.addRepos(listOf(repoDir))
-}
-
-
-val cacheDir = file("${gradle.gradleUserHomeDir}/caches/modules-2/files-2.1") // Ang cache ng Gradle na naglalaman ng mga pom file
-val customRepoDir = file("${gradle.gradleUserHomeDir}/m2") // Ang m2 na folder sa Gradle's home
-
-val excludedFiletypes = listOf(".module")
-val includedFiletypes = listOf(".jar", ".pom")
-
-var verbose = false
-
-fun printVerbose(string: String) = when (verbose) {
-	true -> println(string)
-	false -> Unit
-}
-fun askUser(question: String) : Boolean {
-	println("$question (yes/no)")
-	return readLine()?.equals("yes", ignoreCase = true) ?: false
-}
 fun cacheToRepo() {
+	fun askUser(question: String) : Boolean {
+		println("$question (yes/no)")
+		return readLine()?.equals("yes", ignoreCase = true) ?: false
+	}
 	if (askUser("Skip cacheToRepo()?")) return
-	verbose = askUser("must be verbose?")
+
+	var isVerbose = false
+	fun printVerbose(string: String) = when (isVerbose) {
+		true -> println(string)
+		false -> Unit
+	}
+	isVerbose = askUser("must be verbose?")
+
+	val excludedFiletypes = listOf(".module")
+	val includedFiletypes = listOf(".jar", ".pom")
+
+	val cacheDir = file("${gradle.gradleUserHomeDir}/caches/modules-2/files-2.1")
+	val customRepoDir = file("${gradle.gradleUserHomeDir}/m2")
+
 	println("cacheToRepo task is called.")
 	println("cacheDir: $cacheDir")
 	println("customRepoDir: $customRepoDir")
@@ -280,7 +287,6 @@ fun cacheToRepo() {
 
 		val relativePath = file.relativeTo(cacheDir).path
 		val pathComponents = relativePath.split('/')
-
 		val longPath = pathComponents[0].replace(".", "/")
 		val name = pathComponents[1]
 		val version = pathComponents[2]
@@ -305,11 +311,7 @@ fun cacheToRepo() {
 	}
 }
 
-gradle.projectsEvaluated {
-	cacheToRepo()
-}
-
-
+main()
 EOF
 )
 
