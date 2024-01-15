@@ -1,10 +1,11 @@
 package project
 
 object RPS {
-	object Explainer {}
+	class Round {
+	}
 	object Inquirer {
-		private var hand: Hand?= null
-		private var winHand: Hand?= null
+		var hand: Hand?= null
+		var winHand: Hand?= null
 		fun recieve(hand: Hand) {
 			winHand= when (hand.winsAgainst(this.hand?: hand)) {
 				true -> hand
@@ -13,7 +14,7 @@ object RPS {
 			this.hand= hand
 		}
 	}
-	enum class Hand(val value: Int,) {
+	enum class Hand(val value: Int) {
 		SCISSOR(0),
 		ROCK(1),
 		PAPER(2),;

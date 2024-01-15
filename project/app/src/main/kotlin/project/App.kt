@@ -4,7 +4,7 @@
 package project
 
 object App {
-	fun greet(): String= "Hello World!"
+	fun greet()= "Hello World!"
 }
 
 fun main() {
