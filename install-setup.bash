@@ -2,9 +2,10 @@
 
 main() { 
 	yes | {
+		apt update
+		apt upgrade
 #		apt update
-#		apt upgrade
-#		apt update
+#
 #
 #		#man pages
 #		apt install man
@@ -12,22 +13,38 @@ main() {
 #		#termux-api
 #		apt install termux-api
 #	 
-#		#vim
-#		apt install vim
-#		curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+#		#neovim
+		apt install neovim
+		sh -c 'curl -fLo "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
 #		apt install fzf
 #       apt install tree
 #		apt install nodejs
 #		apt install git
-		echo "$VIMRC" > ~/.vimrc
-#		vi +'PlugInstall --sync' +'PlugClean' +qa
-#		vi +'CocInstall -sync coc-git coc-sh' +qa
+	}
+
+	mkdir -p ~/.config/nvim/lua/lsp
+	echo "$INIT_VIM" > ~/.config/nvim/init.vim
+	echo "$INIT_LUA" > ~/.config/nvim/lua/lsp/init.lua
+#	nvim +'PlugInstall --sync' +qa
+#	nvim +'PlugClean --sync' +qa
+#	#Non-interactive CocInstall with display using Expect
+#	yes | { 
+#		apt install expect
+#	}
+	extensions=("coc-json" "coc-git" "coc-sh")
+	for extension in "${extensions[@]}"; do
+		do_coc_install $extension
+	done
+	nvim +'PlugClean --sync' +qa
+
+	yes | {
 #		apt install bat
 #		#kotlin lsp
 		echo "$COC_CONFIG" > ~/.vim/coc-settings.json
 #		apt install unzip
-#		curl -LJO https://github.com/fwcd/kotlin-language-server/releases/download/1.3.6/server.zip
+#		curl -LJO https://github.com/fwcd/kotlin-language-server/releases/download/1.3.7/server.zip
 #		unzip server.zip
+#		rm -rf ~/lsp
 #		mkdir -p ~/lsp/kotlin
 #		cp -rf server ~/lsp/kotlin
 #		rm -rf server server.zip
@@ -44,15 +61,17 @@ main() {
 #		#git
 #		git clone https://www.github.com/diamond2sword/termux-fun
 #		cp -rf ~/termux-fun/project ~/termux-fun/install-setup.bash $HOME
-#		apt install expect
 #		apt install openssh
 
 #		#gradle
-#		apt install gradle
+		apt install gradle
+		
 		echo "$OFFLINE_INIT_GRADLE_KTS" > ~/.gradle/init.d/offline.init.gradle.kts
 #		#gradle needs internet
-#		cd project
-#		gradle build --offline
+		(
+			cd project
+			gradle build --offline
+		)
 }
 
 #	#because antidote has to install plugins for zsh
@@ -76,10 +95,31 @@ main() {
 #	}
 }
 
-VIMRC=$(cat << "EOF"
-call plug#begin()
+do_coc_install () {
+COC_EXTENSION=$1 expect <<- "EOF"
+	set timeout -1
+	set cocExtension $env(COC_EXTENSION)
+	spawn nvim
+	send ":CocInstall $cocExtension\r"
+
+	expect_before -re "Move extension" {
+		exec sleep 1
+		send "qa!\r"
+	}
+	expect eof
+EOF
+}
+
+INIT_LUA=$(cat << "EOF"
+
+EOF
+)
+
+INIT_VIM=$(cat << "EOF"
+call plug#begin('~/.config/nvim/plugged')
 Plug 'morhetz/gruvbox' "https://github.com/neoclide/coc.nvim/issues/3784
-Plug 'udalov/kotlin-vim'
+Plug 'sheerun/vim-polyglot'
+Plug 'frazrepo/vim-rainbow'
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
@@ -129,16 +169,16 @@ inoremap <expr><S-TAB> coc#pum#visible() ? coc#pum#prev(1) : "\<C-h>"
 inoremap <silent><expr> <CR> coc#pum#visible() ? coc#pum#confirm()
                               \: "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
 function! CheckBackspace() abort
-  let col = col('.') - 1
-  return !col || getline('.')[col - 1]  =~# '\s'
+	let col = col('.') - 1
+	return !col || getline('.')[col - 1]	=~# '\s'
 endfunction
 nnoremap <silent> K :call ShowDocumentation()<CR>
 function! ShowDocumentation()
-  if CocAction('hasProvider', 'hover')
-    call CocActionAsync('doHover')
-  else
-    call feedkeys('K', 'in')
-  endif
+	if CocAction('hasProvider', 'hover')
+		call CocActionAsync('doHover')
+	else
+		call feedkeys('K', 'in')
+	endif
 endfunction
 nnoremap <silent><nowait><expr> <C-b> coc#float#has_scroll() ? coc#float#scroll(1) : "\<C-b>"
 nnoremap <silent><nowait><expr> <C-v> coc#float#has_scroll() ? coc#float#scroll(0) : "\<C-v>"
@@ -180,6 +220,9 @@ export BAT_THEME=gruvbox-dark
 #https://github.com/andrewferrier/fzf-z#customizing-and-options
 export FZFZ_EXTRA_OPTS=" --border=sharp --preview-window=border-sharp"
 export FZFZ_SUBDIR_LIMIT=0
+
+#neovim alias
+alias vim='nvim'
 EOF
 )
 
@@ -214,7 +257,6 @@ fun main() {
 	projectsEvaluated {
 		cacheToRepo()
 	}
-	apply(plugin = "kotlin")
 }
 
 fun addLocalRepo() {
