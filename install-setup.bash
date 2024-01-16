@@ -31,11 +31,11 @@ main() {
 #	yes | { 
 #		apt install expect
 #	}
-	extensions=("coc-json" "coc-git" "coc-sh")
-	for extension in "${extensions[@]}"; do
-		do_coc_install $extension
-	done
-	nvim +'PlugClean --sync' +qa
+#	extensions=("coc-json" "coc-git" "coc-sh")
+#	for extension in "${extensions[@]}"; do
+#		do_coc_install $extension
+#	done
+#	nvim +'PlugClean --sync' +qa
 
 	yes | {
 #		apt install bat
@@ -62,17 +62,25 @@ main() {
 #		git clone https://www.github.com/diamond2sword/termux-fun
 #		cp -rf ~/termux-fun/project ~/termux-fun/install-setup.bash $HOME
 #		apt install openssh
-
-#		#gradle
-		apt install gradle
+	
 		
-		echo "$OFFLINE_INIT_GRADLE_KTS" > ~/.gradle/init.d/offline.init.gradle.kts
-#		#gradle needs internet
-		(
-			cd project
-			gradle build --offline
-		)
-}
+	}
+
+	#gradle
+	apt install gradle
+	echo "$OFFLINE_INIT_GRADLE_KTS" > ~/.gradle/init.d/offline.init.gradle.kts
+	echo "$OPTIMIZE_INIT_GRADLE_KTS" > ~/.gradle/init.d/optimize.init.gradle.kts
+	(
+		#gradle needs internet
+		cd project
+		./gradlew --stop
+		./gradlew clean build \
+			--refresh-dependencies \
+			--build-cache \
+			-Dorg.gradle.jvmargs="-Xmx2g" \
+			-PmustSkipCacheToRepo=false \
+			-PisVerboseCacheToRepo=false
+	)
 
 #	#because antidote has to install plugins for zsh
 #	chsh -s zsh
@@ -223,6 +231,7 @@ export FZFZ_SUBDIR_LIMIT=0
 
 #neovim alias
 alias vim='nvim'
+alias vi='vim'
 EOF
 )
 
@@ -251,11 +260,39 @@ COC_CONFIG=$(cat << "EOF"
 EOF
 )
 
+OPTIMIZE_INIT_GRADLE_KTS=$(cat << "EOF"
+fun main() {
+}
+
+main()
+EOF
+)
+
 OFFLINE_INIT_GRADLE_KTS=$(cat << "EOF"
 fun main() {
 	addLocalRepo()
-	projectsEvaluated {
-		cacheToRepo()
+	allprojects {
+		buildscript {
+			plugins.apply("java")
+			tasks.register("cacheToRepo") {
+				doLast {
+					val mustSkipCacheToRepo: String? by project
+					val isVerboseCacheToRepo: String? by project
+					val mustSkip = mustSkipCacheToRepo?.toBooleanStrictOrNull()
+					val isVerbose = isVerboseCacheToRepo?.toBooleanStrictOrNull()
+					cacheToRepo(mustSkip, isVerbose)
+				}
+			}
+			afterEvaluate {
+				val userSpecifiedTasks = gradle.startParameter.taskNames
+				if (userSpecifiedTasks.isNotEmpty()) {
+					val lastTask = userSpecifiedTasks.last()
+					tasks.named(lastTask) {
+						finalizedBy("cacheToRepo")
+					}
+				}
+			}
+		}
 	}
 }
 
@@ -273,25 +310,29 @@ fun addLocalRepo() {
 	}
 }
 
-fun RepositoryHandler.addRepos(repos: List<File>?) = maven {
-	repos?.forEach { repo ->
-		setUrl(repo.toURI())
+fun RepositoryHandler.addRepos(repos: List<File>?) {
+	mavenCentral()
+	google()
+	maven {
+		repos?.forEach { repo ->
+			setUrl(repo.toURI())
+		}
 	}
 }
 
-fun cacheToRepo() {
+fun cacheToRepo(mustSkip: Boolean? = null, isVerboseParam: Boolean? = null) {
 	fun askUser(question: String) : Boolean {
 		println("$question (yes/no)")
 		return readLine()?.equals("yes", ignoreCase = true) ?: false
 	}
-	if (askUser("Skip cacheToRepo()?")) return
+	if (mustSkip ?: askUser("Skip cacheToRepo()?")) return
 
-	var isVerbose = false
+	var isVerbose = isVerboseParam ?: false 
 	fun printVerbose(string: String) = when (isVerbose) {
 		true -> println(string)
 		false -> Unit
 	}
-	isVerbose = askUser("must be verbose?")
+	isVerbose = isVerboseParam ?: askUser("must be verbose?")
 
 	val excludedFiletypes = listOf(".module")
 	val includedFiletypes = listOf(".jar", ".pom")
