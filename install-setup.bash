@@ -18,6 +18,7 @@ main() {
 		sh -c 'curl -fLo "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
 #		apt install fzf
 #       apt install tree
+#       apt install shellcheck
 #		apt install nodejs
 #		apt install git
 	}
@@ -40,9 +41,9 @@ main() {
 	yes | {
 #		apt install bat
 #		#kotlin lsp
-		echo "$COC_CONFIG" > ~/.vim/coc-settings.json
+		echo "$COC_CONFIG" > ~/.config/nvim/coc-settings.json
 #		apt install unzip
-#		curl -LJO https://github.com/fwcd/kotlin-language-server/releases/download/1.3.7/server.zip
+#		curl -LJO https://github.com/fwcd/kotlin-language-server/releases/download/1.3.9/server.zip
 #		unzip server.zip
 #		rm -rf ~/lsp
 #		mkdir -p ~/lsp/kotlin
@@ -164,36 +165,81 @@ augroup END
 set cursorline
 
 "https://github.com/neoclide/coc.nvim#example-vim-configuration
-set encoding=utf-8
-set nobackup
-set nowritebackup
-set updatetime=300
-set signcolumn=yes
-inoremap <silent><expr> <TAB>
-      \ coc#pum#visible() ? coc#pum#next(1) :
-      \ CheckBackspace() ? "\<Tab>" :
-      \ coc#refresh()
-inoremap <expr><S-TAB> coc#pum#visible() ? coc#pum#prev(1) : "\<C-h>"
-inoremap <silent><expr> <CR> coc#pum#visible() ? coc#pum#confirm()
-                              \: "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
-function! CheckBackspace() abort
-	let col = col('.') - 1
-	return !col || getline('.')[col - 1]	=~# '\s'
-endfunction
-nnoremap <silent> K :call ShowDocumentation()<CR>
-function! ShowDocumentation()
-	if CocAction('hasProvider', 'hover')
-		call CocActionAsync('doHover')
-	else
-		call feedkeys('K', 'in')
-	endif
-endfunction
-nnoremap <silent><nowait><expr> <C-b> coc#float#has_scroll() ? coc#float#scroll(1) : "\<C-b>"
-nnoremap <silent><nowait><expr> <C-v> coc#float#has_scroll() ? coc#float#scroll(0) : "\<C-v>"
-inoremap <silent><nowait><expr> <C-b> coc#float#has_scroll() ? "\<c-r>=coc#float#scroll(1)\<cr>" : "\<Right>"
-inoremap <silent><nowait><expr> <C-v> coc#float#has_scroll() ? "\<c-r>=coc#float#scroll(0)\<cr>" : "\<Left>"
-vnoremap <silent><nowait><expr> <C-b> coc#float#has_scroll() ? coc#float#scroll(1) : "\<C-b>"
-vnoremap <silent><nowait><expr> <C-v> coc#float#has_scroll() ? coc#float#scroll(0) : "\<C-v>"
+verbose imap <tab>
+lua << EOF2
+vim.opt.backup = false
+vim.opt.writebackup = false
+vim.opt.updatetime = 1000 
+vim.opt.signcolumn = "yes"
+local keyset = vim.keymap.set
+function _G.check_back_space()
+    local col = vim.fn.col('.') - 1
+    return col == 0 or vim.fn.getline('.'):sub(col, col):match('%s') ~= nil
+end
+local opts = {silent = true, noremap = true, expr = true, replace_keycodes = false}
+keyset("i", "<TAB>", 'coc#pum#visible() ? coc#pum#next(1) : v:lua.check_back_space() ? "<TAB>" : coc#refresh()', opts)
+keyset("i", "<S-TAB>", [[coc#pum#visible() ? coc#pum#prev(1) : "\<C-h>"]], opts)
+keyset("i", "<cr>", [[coc#pum#visible() ? coc#pum#confirm() : "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"]], opts)
+keyset("i", "<c-j>", "<Plug>(coc-snippets-expand-jump)")
+keyset("i", "<c-space>", "coc#refresh()", {silent = true, expr = true})
+keyset("n", "[g", "<Plug>(coc-diagnostic-prev)", {silent = true})
+keyset("n", "]g", "<Plug>(coc-diagnostic-next)", {silent = true})
+keyset("n", "gd", "<Plug>(coc-definition)", {silent = true})
+keyset("n", "gy", "<Plug>(coc-type-definition)", {silent = true})
+keyset("n", "gi", "<Plug>(coc-implementation)", {silent = true})
+keyset("n", "gr", "<Plug>(coc-references)", {silent = true})
+function _G.show_docs()
+    local cw = vim.fn.expand('<cword>')
+    if vim.fn.index({'vim', 'help'}, vim.bo.filetype) >= 0 then
+        vim.api.nvim_command('h ' .. cw)
+    elseif vim.api.nvim_eval('coc#rpc#ready()') then
+        vim.fn.CocActionAsync('doHover')
+    else
+        vim.api.nvim_command('!' .. vim.o.keywordprg .. ' ' .. cw)
+    end
+end
+keyset("n", "K", '<CMD>lua _G.show_docs()<CR>', {silent = true})
+vim.api.nvim_create_augroup("CocGroup", {})
+vim.api.nvim_create_autocmd("CursorHold", {
+    group = "CocGroup",
+    command = "silent call CocActionAsync('highlight')",
+    desc = "Highlight symbol under cursor on CursorHold"
+})
+vim.api.nvim_create_autocmd("FileType", {
+    group = "CocGroup",
+    pattern = "typescript,json",
+    command = "setl formatexpr=CocAction('formatSelected')",
+    desc = "Setup formatexpr specified filetype(s)."
+})
+vim.api.nvim_create_autocmd("User", {
+    group = "CocGroup",
+    pattern = "CocJumpPlaceholder",
+    command = "call CocActionAsync('showSignatureHelp')",
+    desc = "Update signature help on jump placeholder"
+})
+local opts = {silent = true, nowait = true, expr = true}
+keyset("n", "<C-b>", 'coc#float#has_scroll() ? coc#float#scroll(1) : "<C-b>"', opts)
+keyset("n", "<C-v>", 'coc#float#has_scroll() ? coc#float#scroll(0) : "<C-v>"', opts)
+keyset("i", "<C-b>",
+       'coc#float#has_scroll() ? "<c-r>=coc#float#scroll(1)<cr>" : "<Right>"', opts)
+keyset("i", "<C-v>",
+       'coc#float#has_scroll() ? "<c-r>=coc#float#scroll(0)<cr>" : "<Left>"', opts)
+keyset("v", "<C-b>", 'coc#float#has_scroll() ? coc#float#scroll(1) : "<C-b>"', opts)
+keyset("v", "<C-v>", 'coc#float#has_scroll() ? coc#float#scroll(0) : "<C-v>"', opts)
+vim.api.nvim_create_user_command("Format", "call CocAction('format')", {})
+vim.api.nvim_create_user_command("Fold", "call CocAction('fold', <f-args>)", {nargs = '?'})
+vim.api.nvim_create_user_command("OR", "call CocActionAsync('runCommand', 'editor.action.organizeImport')", {})
+vim.opt.statusline:prepend("%{coc#status()}%{get(b:,'coc_current_function','')}")
+local opts = {silent = true, nowait = true}
+keyset("n", "<space>a", ":<C-u>CocList diagnostics<cr>", opts)
+keyset("n", "<space>e", ":<C-u>CocList extensions<cr>", opts)
+keyset("n", "<space>c", ":<C-u>CocList commands<cr>", opts)
+keyset("n", "<space>o", ":<C-u>CocList outline<cr>", opts)
+keyset("n", "<space>s", ":<C-u>CocList -I symbols<cr>", opts)
+keyset("n", "<space>j", ":<C-u>CocNext<cr>", opts)
+keyset("n", "<space>k", ":<C-u>CocPrev<cr>", opts)
+keyset("n", "<space>p", ":<C-u>CocListResume<cr>", opts)
+EOF2
 
 let g:lightline = {
   \   'active': {
@@ -253,7 +299,10 @@ COC_CONFIG=$(cat << "EOF"
 	"languageserver": {
 		"kotlin": {
 		    "command": "~/lsp/kotlin/server/bin/kotlin-language-server",
-	    	"filetypes": ["kotlin"]
+	    	"filetypes": ["kotlin"],
+			"env": {
+		        "JAVA_OPTS": "-Xms512m -Xmx4g"
+	      	}
 		}
 	}
 }
@@ -295,6 +344,8 @@ fun main() {
 		}
 	}
 }
+
+
 
 fun addLocalRepo() {
 	val reposDir = gradle.getGradleUserHomeDir().resolve("repos")
