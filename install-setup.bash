@@ -39,16 +39,18 @@ main() {
 #	nvim +'PlugClean --sync' +qa
 
 	yes | {
-#		apt install bat
-#		#kotlin lsp
-		echo "$COC_CONFIG" > ~/.config/nvim/coc-settings.json
-#		apt install unzip
-#		curl -LJO https://github.com/fwcd/kotlin-language-server/releases/download/1.3.9/server.zip
-#		unzip server.zip
-#		rm -rf ~/lsp
-#		mkdir -p ~/lsp/kotlin
-#		cp -rf server ~/lsp/kotlin
-#		rm -rf server server.zip
+		false && (
+			#kotlin lsp
+			apt install bat
+			echo "$COC_CONFIG" > ~/.config/nvim/coc-settings.json
+			apt install unzip
+			curl -LJO https://github.com/fwcd/kotlin-language-server/releases/download/1.3.7/server.zip
+			unzip server.zip
+			rm -rf ~/lsp
+			mkdir -p ~/lsp/kotlin
+			cp -rf server ~/lsp/kotlin
+			rm -rf server server.zip
+		)
 #	 
 #		#zsh
 #		apt install zsh
@@ -71,7 +73,7 @@ main() {
 	apt install gradle
 	echo "$OFFLINE_INIT_GRADLE_KTS" > ~/.gradle/init.d/offline.init.gradle.kts
 	echo "$OPTIMIZE_INIT_GRADLE_KTS" > ~/.gradle/init.d/optimize.init.gradle.kts
-	(
+	false && (
 		#gradle needs internet
 		cd project
 		./gradlew --stop
@@ -272,8 +274,9 @@ zstyle ':completion:*' menu select
 export BAT_THEME=gruvbox-dark
 
 #https://github.com/andrewferrier/fzf-z#customizing-and-options
-export FZFZ_EXTRA_OPTS=" --border=sharp --preview-window=border-sharp"
+export FZFZ_EXTRA_OPTS=" --border=sharp --preview-window=border-sharp --bind='ctrl-b:preview-down,ctrl-v:preview-up'"
 export FZFZ_SUBDIR_LIMIT=0
+export FZF_BIN_PATH="fzf --bind='ctrl-z:abort'"
 
 #neovim alias
 alias vim='nvim'
@@ -296,13 +299,47 @@ EOF
 
 COC_CONFIG=$(cat << "EOF"
 {
+	"coc.preferences.jvmHeapSize": 2048,
 	"languageserver": {
 		"kotlin": {
 		    "command": "~/lsp/kotlin/server/bin/kotlin-language-server",
+			"args": ["-Xmx2g", "-J-Xmx2g"],
 	    	"filetypes": ["kotlin"],
-			"env": {
-		        "JAVA_OPTS": "-Xms512m -Xmx4g"
-	      	}
+			"javaHome": "$JAVA_HOME",
+      		"javaServerOptions": ["-Xmx2g"],
+			"initializationOptions": {
+		      	"storagePath": "~/lsp/kotlin/caches"
+		   	}
+		}
+	}
+}
+EOF
+)
+
+TEMP=$(cat << "EOF"
+{
+	"coc.preferences.jvmHeapSize": 2048,
+	"languageserver": {
+		"kotlin": {
+		    "command": "~/lsp/kotlin/server/bin/kotlin-language-server",
+			"args": ["-Xmx2g", "-J-Xmx2g"],
+	    	"filetypes": ["kotlin"],
+			"memory": {
+        		"maxHeap": "2G"
+	      	},
+			"javaServerRuntime": {
+        		"maxHeap": "2G"
+      		},
+			"initializationOptions": {
+        		"compilerOptions": {
+          			"jvm": true
+  		      	},
+				"jvm": {
+	          		"maximumHeapSize": "2G" 
+	      		}
+			},
+			"javaHome": "$JAVA_HOME",
+      		"javaServerOptions": ["-Xmx2g"]
 		}
 	}
 }
@@ -320,9 +357,14 @@ EOF
 OFFLINE_INIT_GRADLE_KTS=$(cat << "EOF"
 fun main() {
 	addLocalRepo()
+	configureCacheToRepoTask()
+}
+
+fun configureCacheToRepoTask() {
 	allprojects {
 		buildscript {
 			plugins.apply("java")
+			plugins.apply("application")
 			tasks.register("cacheToRepo") {
 				doLast {
 					val mustSkipCacheToRepo: String? by project
@@ -344,8 +386,6 @@ fun main() {
 		}
 	}
 }
-
-
 
 fun addLocalRepo() {
 	val reposDir = gradle.getGradleUserHomeDir().resolve("repos")

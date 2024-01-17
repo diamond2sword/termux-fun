@@ -38,7 +38,7 @@ are_equal_strings () {
 					fi
 				done
 				if ! "$is_word_in_main_word_list"; then
-					return
+					return 1
 				fi				
 			done
 		done
