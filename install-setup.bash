@@ -1,9 +1,8 @@
 #!/bin/bash
-
 main() { 
 	yes | {
-		apt update
-		apt upgrade
+#		apt update
+#		apt upgrade
 #		apt update
 #
 #
@@ -14,18 +13,21 @@ main() {
 #		apt install termux-api
 #	 
 #		#neovim
-		apt install neovim
-		sh -c 'curl -fLo "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
+#		apt install neovim
+#		sh -c 'curl -fLo "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
 #		apt install fzf
 #       apt install tree
 #       apt install shellcheck
 #		apt install nodejs
 #		apt install git
+		true
 	}
 
-	mkdir -p ~/.config/nvim/lua/lsp
 	echo "$INIT_VIM" > ~/.config/nvim/init.vim
+	mkdir -p ~/.config/nvim/lua/lsp
 	echo "$INIT_LUA" > ~/.config/nvim/lua/lsp/init.lua
+	mkdir -p ~/.config/nvim/after/syntax/sh
+	echo "$VIM_SH_HEREDOC_HIGHLIGHTING" > ~/.config/nvim/after/syntax/sh/heredoc-sh.vim
 #	nvim +'PlugInstall --sync' +qa
 #	nvim +'PlugClean --sync' +qa
 #	#Non-interactive CocInstall with display using Expect
@@ -70,7 +72,7 @@ main() {
 	}
 
 	#gradle
-	apt install gradle
+#	apt install gradle
 	echo "$OFFLINE_INIT_GRADLE_KTS" > ~/.gradle/init.d/offline.init.gradle.kts
 	echo "$OPTIMIZE_INIT_GRADLE_KTS" > ~/.gradle/init.d/optimize.init.gradle.kts
 	false && (
@@ -121,7 +123,61 @@ COC_EXTENSION=$1 expect <<- "EOF"
 EOF
 }
 
-INIT_LUA=$(cat << "EOF"
+INIT_LUA=$(cat << "LUAEOF"
+
+LUAEOF
+)
+
+INIT_VIM=$(cat << "EOF"
+call plug#begin('~/.config/nvim/plugged')
+Plug 'morhetz/gruvbox' "https://github.com/neoclide/coc.nvim/issues/3784
+Plug 'sheerun/vim-polyglot'
+Plug 'frazrepo/vim-rainbow'
+Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
+Plug 'junegunn/fzf.vim'
+Plug 'neoclide/coc.nvim', {'branch': 'release'}
+Plug 'josa42/vim-lightline-coc'
+Plug 'itchyny/lightline.vim'
+call plug#end()
+
+"https://linuxhandbook.com/vim-indentation-tab-spaces/
+set autoindent
+set noexpandtab
+set tabstop=4 
+set shiftwidth=4
+
+"https://www.reddit.com/r/neovim/comments/131urrq/make_the_cursorline_in_neovim_semitransparent/
+nmap <C-g> :Files<CR>
+
+"https://github.com/neoclide/coc.nvim/issues/3784
+set t_Co=256
+syntax enable
+silent! colorscheme gruvbox
+autocmd ColorScheme * highlight CocHighlightText gui=None guibg=#665c54
+set background=dark
+let g:coc_default_semantic_highlight_groups = 1
+
+"https://jeffkreeftmeijer.com/vim-number/
+set number
+augroup numbertoggle
+	autocmd!
+	autocmd BufEnter,FocusGained,InsertLeave,WinEnter * if &nu && mode() != "i" | set rnu   | endif
+	autocmd BufLeave,FocusLost,InsertEnter,WinLeave   * if &nu                  | set nornu | endif
+augroup END
+
+"https://www.reddit.com/r/vim/comments/eck1tl/comment/fbcox26/
+set cursorline
+
+"https://github.com/neoclide/coc.nvim#example-vim-configuration
+verbose imap <tab>
+
+let g:lightline = {
+  \   'active': {
+  \     'left': [[  'coc_info', 'coc_hints', 'coc_errors', 'coc_warnings', 'coc_ok' ], [ 'coc_status'  ]]
+  \   }
+  \ }
+" register components:
+call lightline#coc#register()
 
 EOF
 )
@@ -169,6 +225,7 @@ set cursorline
 "https://github.com/neoclide/coc.nvim#example-vim-configuration
 verbose imap <tab>
 lua << EOF2
+-- https://github.com/neoclide/coc.nvim#example-vim-configuration
 vim.opt.backup = false
 vim.opt.writebackup = false
 vim.opt.updatetime = 1000 
@@ -251,11 +308,261 @@ let g:lightline = {
 
 " register compoments:
 call lightline#coc#register()
+
+EOF
+)
+
+VIM_SH_HEREDOC_HIGHLIGHTING=$(cat << "VIMEOF"
+syntax cluster shHeredocHL contains=@sh
+
+" Define a function for handling heredoc syntax highlighting
+function! DefHeredocSyntax(marker, contains)
+    let original_syntax = b:current_syntax
+    unlet b:current_syntax
+
+    " Load the relevant syntax file
+    let include_cmd = "syntax include @" . a:contains . " syntax/" . a:contains . ".vim"
+    execute include_cmd
+    let b:current_syntax = original_syntax
+
+    " Iterate through heredoc types and create syntax regions
+    for [quoteName, quoteSymbol] in items({
+          \ "PlainQuote": "",
+          \ "SingleQuote": "'",
+          \ "DoubleQuote": "\""
+          \ })
+		let region = "heredoc" . a:marker . quoteName
+        let start_pattern = '+<<[-]\\?\\s*' . quoteSymbol . a:marker . quoteSymbol . '.*$+'
+        let end_pattern = '+\\s*' . a:marker . '\\s*$+'
+		let region_cmd = "syntax region " . region .
+		  \ " matchgroup=Snip" .
+		  \ " start=" . start_pattern .
+		  \ " end=" . end_pattern .
+		  \ " containedin=@sh,@shHereDocHL" 
+		  \ " contains=@" . a:contains
+        let cluster_cmd = "syntax cluster shHeredocHL add=" . region
+        execute region_cmd
+        execute cluster_cmd
+    endfor
+endfunction
+
+" Define a function to apply heredoc syntax to specified markers and filetypes
+function! ApplyHeredocSyntax()
+    for [marker, contains] in items(extend(g:heredocs_default, get(g:, 'heredocs', {})))
+        call DefHeredocSyntax(marker, contains)
+    endfor
+endfunction
+
+" Call the function to apply heredoc syntax highlighting
+call ApplyHeredocSyntax()
+VIMEOF
+)
+
+VIM_SH_HEREDOC_HIGHLIGHTING=$(cat << "VIMEOF"
+syntax cluster shHeredocHL contains=@sh
+
+function! Def_heredoc(marker, contains)
+    let s:bcs = b:current_syntax
+    unlet b:current_syntax
+    " Load the relavant syntax file
+    execute "syntax include @" . a:contains . " syntax/" . a:contains . ".vim"
+    let b:current_syntax = s:bcs
+
+    for [region, quotation] in items({"heredoc" . a:marker . "Plain": "", "heredoc" . a:marker . "SingleQuote": "'", "heredoc" . a:marker . "DoubleQuote": "\""})
+        execute "syntax region " . region . " matchgroup=Snip start=+<<[-]\\?\\s*" . quotation . a:marker . quotation . ".*$+ end=+\\s*" . a:marker . "\\s*$+ containedin=@sh,@shHereDocHL contains=@" . a:contains
+        execute "syntax cluster shHeredocHL add=" . region
+    endfor
+endfunction
+
+let g:heredocs_default = #{PYTHON: "python", LUA: "lua", PERL: "perl", SHELL: "sh", GNUPLOT: "gnuplot", JSON: "json", VIMEOF: "vim"}
+for [marker, contains] in items(extend(g:heredocs_default, get(g:, 'heredocs', {})))
+    call Def_heredoc(marker, contains)
+endfor
+VIMEOF
+)
+
+VIM_SH_HEREDOC_HIGHLIGHTINGS=$(cat << "VIMEOF"
+function! GetHeredocFiletypeList(buffer_content, heredoc_pattern)
+	"let match_start = 0
+	"let heredoc_filetype_list = []
+	"while matchstart(buffer_content, heredoc_pattern, match_start) != =1
+		let matched_heredoc_info = matchlist(a:buffer_content, a:heredoc_pattern)
+		"call add(heredoc_filetype_list, matched_heredoc_info[3])	
+	"endwhile
+	"return heredoc_filetype_list
+	return matched_heredoc_info
+endfunction
+
+"<<-?\s*(["'])(([A-Z]+)EOF)\1\s*?\n(?:[^\n]*\n)*?\2
+"<<-\?\s*\(["']\)\(\([A-Z]+\)EOF\)\1\s\{-0,}\n\%([^\n]*\n\)\{-0,}\2
+let heredoc_pattern = "<<-\\?\\s*\\([\"']\\)\\(\\([A-Z]+\\)EOF\\)\\1\\s\\{-0,}\\n\\%([^\\n]*\\n\\)\\{-0,}\\2"
+let heredoc_pattern = "\v<<-?"
+let buffer_content = join(getline(1, '$'), "\n")
+
+
+let filetype_list = GetHeredocFiletypeList(buffer_content, heredoc_pattern)
+echom "the filetypes are:"
+for filetype in filetype_list
+	echom filetype
+endfor
+
+
+VIMEOF
+)
+
+VIM_SH_HEREDOC_HIGHLIGHTINGS=$(cat << "VIMEOF"
+"I-set ang autocmd para tawagin ang CursorMoved event
+"autocmd CursorMoved,BufWritePost * call DoSomethingWhenCursorMoves()
+
+function! DoSomethingWhenCursorMoves()
+	let l:cursorPosition = getpos('.')
+	let l:heredocStartPattern = '^\(\s*\).*<<\(-\?\)\s*\(["\x27]\)\(\(\w\+\)EOF\)\3\s*'
+	let [l:cursorHeredocStartRow, _] = searchpos(l:heredocStartPattern, 'zbnW')
+	let l:cursorHeredocStartString = getline(l:cursorHeredocStartRow)
+	let l:cursorHeredocStartMatchList = matchlist(l:cursorHeredocStartString, l:heredocStartPattern)
+
+	if (len(l:cursorHeredocStartMatchList) == 0)
+		return v:null
+	endif
+	
+	let l:cursorHeredocStartIndent = l:cursorHeredocStartMatchList[1]
+	let l:cursorHeredocStartDelimiter = l:cursorHeredocStartMatchList[4]
+	let l:cursorHeredocContentFiletype = tolower(l:cursorHeredocStartMatchList[5])
+	let l:cursorHeredocContentFiletypeSyntaxFile = 'syntax/' . l:cursorHeredocContentFiletype . '.vim'
+
+	if findfile(l:cursorHeredocContentFiletypeSyntaxFile, &runtimepath) == ""
+		return v:null
+	endif
+
+	let l:cursorHeredocEndPattern = '^' . l:cursorHeredocStartDelimiter . '\n'
+	
+	call cursor(l:cursorHeredocStartRow, 1)
+	let [l:cursorHeredocEndRow, _] = searchpos(l:cursorHeredocEndPattern, 'znW')
+	call setpos('.', l:cursorPosition)
+
+	let l:cursorHeredocSyntaxRegionStartPattern = '/\%>' . l:cursorHeredocStartRow . 'l/' 
+	let l:cursorHeredocSyntaxRegionEndPattern = '/\%<' . l:cursorHeredocEndRow . 'l/'
+	let l:cursorHeredocIncludeContentSyntaxCommand = 'syntax include @' . l:cursorHeredocContentFiletype . ' ' . l:cursorHeredocContentFiletypeSyntaxFile
+	let l:cursorHeredocDefineSyntaxRegionCommand = 'syntax region CursorHeredocSyntaxRegion start=' . l:cursorHeredocSyntaxRegionStartPattern . ' end=' . l:cursorHeredocSyntaxRegionEndPattern . ' contains=@' . l:cursorHeredocContentFiletype . ' containedin=@sh'
+
+	execute l:cursorHeredocIncludeContentSyntaxCommand
+	execute l:cursorHeredocDefineSyntaxRegionCommand
+
+
+	let l:echoString = []
+	call add(l:echoString, 'Cursor at ' . join(l:cursorPosition, ', '))
+	call add(l:echoString, 'Matched the heredoc start pattern: ' . g:heredocStartPattern . ' at row:' . l:cursorHeredocStartRow)
+	call add(l:echoString, 'heredoc start string: ' . l:cursorHeredocStartString)
+	call add(l:echoString, 'heredoc start match list: [' . join(l:cursorHeredocStartMatchList, ', ') . ']')
+	call add(l:echoString, 'heredoc start match list size: ' . len(l:cursorHeredocStartMatchList))
+	call add(l:echoString, 'heredoc start delimiter: ' . l:cursorHeredocStartDelimiter)
+	call add(l:echoString, 'Matched the heredoc end pattern: ' . l:cursorHeredocEndPattern . ' at row: ' . l:cursorHeredocEndRow)
+	call add(l:echoString, 'Define syntax region with: ' . l:cursorHeredocDefineSyntaxRegionCommand)
+
+	call writefile(l:echoString, $HOME . "/heredoc.log")
+
+
+endfunction
+
+
+VIMEOF
+)
+
+VIM_SH_HEREDOC_HIGHLIGHTING=$(cat << 'VIMEOF'
+function! Main()
+	syntax cluster shHeredocHL contains=@sh
+
+	let g:heredocStartPattern = '<<-\?\s*\(["\x27]\)\(\(\w\+\)EOF\)\1\s*'
+	let g:previousDefinedHeredocFiletype = v:null
+	let g:neededHeredocFiletypeList = ['sh', 'zsh', 'bash']
+
+	for filetype in g:neededHeredocFiletypeList
+		call DefineHeredocSyntaxRegionFor(filetype)
+	endfor
+
+	autocmd CursorMoved * :call UpdateCursorHeredocSyntaxRegion()
+endfunction
+
+function! UpdateCursorHeredocSyntaxRegion()
+	let [l:heredocStartRow, _] = searchpos(g:heredocStartPattern, 'zbnW')
+	let l:heredocStartString = getline(l:heredocStartRow)
+	let l:heredocStartMatchList = matchlist(l:heredocStartString, g:heredocStartPattern)
+	if len(l:heredocStartMatchList) == 0
+		return v:null
+	endif
+	let l:filetype = tolower(l:heredocStartMatchList[3])
+
+	if count(g:neededHeredocFiletypeList, l:filetype) != 0
+		return v:null
+	endif
+
+	if l:filetype == g:previousDefinedHeredocFiletype
+		return v:null
+	endif
+
+	let l:syntaxPath = 'syntax/' . l:filetype . '.vim'
+	if findfile(l:syntaxPath, &runtimepath) == ""
+		return v:null
+	endif
+	
+	if g:previousDefinedHeredocFiletype != v:null
+		let l:previousRegion = 'heredoc' . g:previousDefinedHeredocFiletype
+		if hlexists(l:previousRegion) 
+			execute 'syntax clear ' . l:previousRegion
+		endif
+		if hlexists('@' . l:filetype)
+		endif
+	endif
+
+	let g:previousDefinedHeredocFiletype = l:filetype
+
+	call DefineHeredocSyntaxRegionFor(l:filetype)
+endfunction
+
+function! DefineHeredocSyntaxRegionFor(filetype)
+	let l:bcs = b:current_syntax
+	unlet b:current_syntax
+	execute "syntax include @" . a:filetype . " syntax/" . a:filetype . ".vim"
+	let b:current_syntax = l:bcs
+
+	let l:region = 'heredoc' . a:filetype
+	let l:delimiter = toupper(a:filetype)
+	let l:start_pattern = '/<<-\?\s*\([\x27"]\)' . l:delimiter . 'EOF\1\s*/'
+	let l:end_pattern = '/^' . l:delimiter . 'EOF$/'
+	execute 'syntax region ' . l:region . 
+		\ ' matchgroup=Snip' .
+		\ ' start=' . l:start_pattern . 
+		\ ' end=' . l:end_pattern .
+		\ ' containedin=@sh,@shHereDocHL contains=@' . a:filetype
+	execute 'syntax cluster shHeredocHL add=' . l:region
+endfunction
+
+call Main()
+VIMEOF
+)
+
+HEREDOC_PATTERNS=$(cat << "EOF"
+start="<<\s*\z([^ \t|>]\+\)" end="^\z1$"
+start="<<-\s*\z([^ \t|>]\+\)" end="^\s*\z1$"
+start="<<\s*\\\z([^ \t|>]\+\)" end="^\z1$"
+start="<<-\s*\\\z([^ \t|>]\+\)" end="^\s*\z1$"
+start="<<\s*'\z([^']\+\)'" end="^\z1$"
+start="<<-\s*'\z([^']\+\)'" end="^\s*\z1$"
+start="<<\s*\"\z([^"]\+\)\"" end="^\z1$"
+start="<<-\s*\"\z([^"]\+\)\"" end="^\s*\z1$"
+start="<<\s*\\\_$\_s*\z([^ \t|>]\+\)" end="^\z1$"
+start="<<-\s*\\\_$\_s*\z([^ \t|>]\+\)" end="^\s*\z1$"
+start="<<\s*\\\_$\_s*\\\z([^ \t|>]\+\)" end="^\z1$"
+start="<<-\s*\\\_$\_s*\\\z([^ \t|>]\+\)" end="^\s*\z1$"
+start="<<\s*\\\_$\_s*'\z([^']\+\)'" end="^\z1$"
+start="<<-\s*\\\_$\_s*'\z([^']\+\)'" end="^\s*\z1$"
+start="<<\s*\\\_$\_s*\"\z([^"]\+\)\"" end="^\z1$"
+start="<<-\s*\\\_$\_s*\"\z([^"]\+\)\"" end="^\s*\z1$"
 EOF
 )
 
 
-ZSHRC_CUSTOM=$(cat << "EOF"
+ZSHRC_CUSTOM=$(cat << "ZSHEOF"
 #https://getantidote.github.io/install
 zsh_plugins=${ZDOTDIR:-~}/.zsh_plugins.zsh
 [[ -f ${zsh_plugins:r}.txt ]] || touch ${zsh_plugins:r}.txt
@@ -281,9 +588,8 @@ export FZF_BIN_PATH="fzf --bind='ctrl-z:abort'"
 #neovim alias
 alias vim='nvim'
 alias vi='vim'
-EOF
+ZSHEOF
 )
-
 ZSH_PLUGINS_TXT=$(cat << "EOF"
 zsh-users/zsh-autosuggestions
 
@@ -297,10 +603,10 @@ andrewferrier/fzf-z
 EOF
 )
 
-COC_CONFIG=$(cat << "EOF"
+COC_CONFIG=$(cat << "JSONEOF"
 {
 	"coc.preferences.jvmHeapSize": 2048,
-	"languageserver": {
+	"languageserveir": {
 		"kotlin": {
 		    "command": "~/lsp/kotlin/server/bin/kotlin-language-server",
 			"args": ["-Xmx2g", "-J-Xmx2g"],
@@ -313,10 +619,10 @@ COC_CONFIG=$(cat << "EOF"
 		}
 	}
 }
-EOF
+JSONEOF
 )
 
-TEMP=$(cat << "EOF"
+TEMP=$(cat << "JSONEOF"
 {
 	"coc.preferences.jvmHeapSize": 2048,
 	"languageserver": {
@@ -343,18 +649,18 @@ TEMP=$(cat << "EOF"
 		}
 	}
 }
-EOF
+JSONEOF
 )
 
-OPTIMIZE_INIT_GRADLE_KTS=$(cat << "EOF"
+OPTIMIZE_INIT_GRADLE_KTS=$(cat << "KOTLINEOF"
 fun main() {
 }
 
 main()
-EOF
+KOTLINEOF
 )
 
-OFFLINE_INIT_GRADLE_KTS=$(cat << "EOF"
+OFFLINE_INIT_GRADLE_KTS=$(cat << "KOTLINEOF"
 fun main() {
 	addLocalRepo()
 	configureCacheToRepoTask()
@@ -363,25 +669,30 @@ fun main() {
 fun configureCacheToRepoTask() {
 	allprojects {
 		buildscript {
-			plugins.apply("java")
-			plugins.apply("application")
+			fun cacheToRepoInteractive() {
+				val mustSkipCacheToRepo: String? by project
+				val isVerboseCacheToRepo: String? by project
+				val mustSkip = mustSkipCacheToRepo?.toBooleanStrictOrNull()
+				val isVerbose = isVerboseCacheToRepo?.toBooleanStrictOrNull()
+				cacheToRepo(mustSkip, isVerbose)
+			}
 			tasks.register("cacheToRepo") {
 				doLast {
-					val mustSkipCacheToRepo: String? by project
-					val isVerboseCacheToRepo: String? by project
-					val mustSkip = mustSkipCacheToRepo?.toBooleanStrictOrNull()
-					val isVerbose = isVerboseCacheToRepo?.toBooleanStrictOrNull()
-					cacheToRepo(mustSkip, isVerbose)
+					cacheToRepoInteractive()
+				}
+			}
+			taskGraph.whenReady {
+				val userSpecifiedTasks = startParameter.taskNames
+				val allTasks = taskGraph.getAllTasks()
+				if (userSpecifiedTasks.isNotEmpty()) {
+					val lastTask = allTasks.last()
+					lastTask.doLast {
+						cacheToRepo()	
+					}
 				}
 			}
 			afterEvaluate {
-				val userSpecifiedTasks = gradle.startParameter.taskNames
-				if (userSpecifiedTasks.isNotEmpty()) {
-					val lastTask = userSpecifiedTasks.last()
-					tasks.named(lastTask) {
-						finalizedBy("cacheToRepo")
-					}
-				}
+				val allTasks = getAllTasks(true)
 			}
 		}
 	}
@@ -410,6 +721,7 @@ fun RepositoryHandler.addRepos(repos: List<File>?) {
 		}
 	}
 }
+
 
 fun cacheToRepo(mustSkip: Boolean? = null, isVerboseParam: Boolean? = null) {
 	fun askUser(question: String) : Boolean {
@@ -486,7 +798,7 @@ fun cacheToRepo(mustSkip: Boolean? = null, isVerboseParam: Boolean? = null) {
 }
 
 main()
-EOF
+KOTLINEOF
 )
 
 main "$@"
