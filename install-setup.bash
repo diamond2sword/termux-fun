@@ -56,6 +56,7 @@ main() {
 #	 
 #		#zsh
 #		apt install zsh
+
 #		sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"	
 #		git clone --depth=1 https://github.com/mattmc3/antidote.git ${ZDOTDIR:-$HOME}/.antidote
 		echo "$ZSH_PLUGINS_TXT" > ~/.zsh_plugins.txt
@@ -301,171 +302,15 @@ keyset("n", "<space>p", ":<C-u>CocListResume<cr>", opts)
 EOF2
 
 let g:lightline = {
-  \   'active': {
-  \     'left': [[  'coc_info', 'coc_hints', 'coc_errors', 'coc_warnings', 'coc_ok' ], [ 'coc_status'  ]]
-  \   }
-  \ }
+	\ 'active': {
+  	\ 	'left': [['coc_info', 'coc_hints', 'coc_errors', 'coc_warnings', 'coc_ok'], ['coc_status']]
+  	\ }
+\ }
 
 " register compoments:
 call lightline#coc#register()
 
 EOF
-)
-
-VIM_SH_HEREDOC_HIGHLIGHTING=$(cat << "VIMEOF"
-syntax cluster shHeredocHL contains=@sh
-
-" Define a function for handling heredoc syntax highlighting
-function! DefHeredocSyntax(marker, contains)
-    let original_syntax = b:current_syntax
-    unlet b:current_syntax
-
-    " Load the relevant syntax file
-    let include_cmd = "syntax include @" . a:contains . " syntax/" . a:contains . ".vim"
-    execute include_cmd
-    let b:current_syntax = original_syntax
-
-    " Iterate through heredoc types and create syntax regions
-    for [quoteName, quoteSymbol] in items({
-          \ "PlainQuote": "",
-          \ "SingleQuote": "'",
-          \ "DoubleQuote": "\""
-          \ })
-		let region = "heredoc" . a:marker . quoteName
-        let start_pattern = '+<<[-]\\?\\s*' . quoteSymbol . a:marker . quoteSymbol . '.*$+'
-        let end_pattern = '+\\s*' . a:marker . '\\s*$+'
-		let region_cmd = "syntax region " . region .
-		  \ " matchgroup=Snip" .
-		  \ " start=" . start_pattern .
-		  \ " end=" . end_pattern .
-		  \ " containedin=@sh,@shHereDocHL" 
-		  \ " contains=@" . a:contains
-        let cluster_cmd = "syntax cluster shHeredocHL add=" . region
-        execute region_cmd
-        execute cluster_cmd
-    endfor
-endfunction
-
-" Define a function to apply heredoc syntax to specified markers and filetypes
-function! ApplyHeredocSyntax()
-    for [marker, contains] in items(extend(g:heredocs_default, get(g:, 'heredocs', {})))
-        call DefHeredocSyntax(marker, contains)
-    endfor
-endfunction
-
-" Call the function to apply heredoc syntax highlighting
-call ApplyHeredocSyntax()
-VIMEOF
-)
-
-VIM_SH_HEREDOC_HIGHLIGHTING=$(cat << "VIMEOF"
-syntax cluster shHeredocHL contains=@sh
-
-function! Def_heredoc(marker, contains)
-    let s:bcs = b:current_syntax
-    unlet b:current_syntax
-    " Load the relavant syntax file
-    execute "syntax include @" . a:contains . " syntax/" . a:contains . ".vim"
-    let b:current_syntax = s:bcs
-
-    for [region, quotation] in items({"heredoc" . a:marker . "Plain": "", "heredoc" . a:marker . "SingleQuote": "'", "heredoc" . a:marker . "DoubleQuote": "\""})
-        execute "syntax region " . region . " matchgroup=Snip start=+<<[-]\\?\\s*" . quotation . a:marker . quotation . ".*$+ end=+\\s*" . a:marker . "\\s*$+ containedin=@sh,@shHereDocHL contains=@" . a:contains
-        execute "syntax cluster shHeredocHL add=" . region
-    endfor
-endfunction
-
-let g:heredocs_default = #{PYTHON: "python", LUA: "lua", PERL: "perl", SHELL: "sh", GNUPLOT: "gnuplot", JSON: "json", VIMEOF: "vim"}
-for [marker, contains] in items(extend(g:heredocs_default, get(g:, 'heredocs', {})))
-    call Def_heredoc(marker, contains)
-endfor
-VIMEOF
-)
-
-VIM_SH_HEREDOC_HIGHLIGHTINGS=$(cat << "VIMEOF"
-function! GetHeredocFiletypeList(buffer_content, heredoc_pattern)
-	"let match_start = 0
-	"let heredoc_filetype_list = []
-	"while matchstart(buffer_content, heredoc_pattern, match_start) != =1
-		let matched_heredoc_info = matchlist(a:buffer_content, a:heredoc_pattern)
-		"call add(heredoc_filetype_list, matched_heredoc_info[3])	
-	"endwhile
-	"return heredoc_filetype_list
-	return matched_heredoc_info
-endfunction
-
-"<<-?\s*(["'])(([A-Z]+)EOF)\1\s*?\n(?:[^\n]*\n)*?\2
-"<<-\?\s*\(["']\)\(\([A-Z]+\)EOF\)\1\s\{-0,}\n\%([^\n]*\n\)\{-0,}\2
-let heredoc_pattern = "<<-\\?\\s*\\([\"']\\)\\(\\([A-Z]+\\)EOF\\)\\1\\s\\{-0,}\\n\\%([^\\n]*\\n\\)\\{-0,}\\2"
-let heredoc_pattern = "\v<<-?"
-let buffer_content = join(getline(1, '$'), "\n")
-
-
-let filetype_list = GetHeredocFiletypeList(buffer_content, heredoc_pattern)
-echom "the filetypes are:"
-for filetype in filetype_list
-	echom filetype
-endfor
-
-
-VIMEOF
-)
-
-VIM_SH_HEREDOC_HIGHLIGHTINGS=$(cat << "VIMEOF"
-"I-set ang autocmd para tawagin ang CursorMoved event
-"autocmd CursorMoved,BufWritePost * call DoSomethingWhenCursorMoves()
-
-function! DoSomethingWhenCursorMoves()
-	let l:cursorPosition = getpos('.')
-	let l:heredocStartPattern = '^\(\s*\).*<<\(-\?\)\s*\(["\x27]\)\(\(\w\+\)EOF\)\3\s*'
-	let [l:cursorHeredocStartRow, _] = searchpos(l:heredocStartPattern, 'zbnW')
-	let l:cursorHeredocStartString = getline(l:cursorHeredocStartRow)
-	let l:cursorHeredocStartMatchList = matchlist(l:cursorHeredocStartString, l:heredocStartPattern)
-
-	if (len(l:cursorHeredocStartMatchList) == 0)
-		return v:null
-	endif
-	
-	let l:cursorHeredocStartIndent = l:cursorHeredocStartMatchList[1]
-	let l:cursorHeredocStartDelimiter = l:cursorHeredocStartMatchList[4]
-	let l:cursorHeredocContentFiletype = tolower(l:cursorHeredocStartMatchList[5])
-	let l:cursorHeredocContentFiletypeSyntaxFile = 'syntax/' . l:cursorHeredocContentFiletype . '.vim'
-
-	if findfile(l:cursorHeredocContentFiletypeSyntaxFile, &runtimepath) == ""
-		return v:null
-	endif
-
-	let l:cursorHeredocEndPattern = '^' . l:cursorHeredocStartDelimiter . '\n'
-	
-	call cursor(l:cursorHeredocStartRow, 1)
-	let [l:cursorHeredocEndRow, _] = searchpos(l:cursorHeredocEndPattern, 'znW')
-	call setpos('.', l:cursorPosition)
-
-	let l:cursorHeredocSyntaxRegionStartPattern = '/\%>' . l:cursorHeredocStartRow . 'l/' 
-	let l:cursorHeredocSyntaxRegionEndPattern = '/\%<' . l:cursorHeredocEndRow . 'l/'
-	let l:cursorHeredocIncludeContentSyntaxCommand = 'syntax include @' . l:cursorHeredocContentFiletype . ' ' . l:cursorHeredocContentFiletypeSyntaxFile
-	let l:cursorHeredocDefineSyntaxRegionCommand = 'syntax region CursorHeredocSyntaxRegion start=' . l:cursorHeredocSyntaxRegionStartPattern . ' end=' . l:cursorHeredocSyntaxRegionEndPattern . ' contains=@' . l:cursorHeredocContentFiletype . ' containedin=@sh'
-
-	execute l:cursorHeredocIncludeContentSyntaxCommand
-	execute l:cursorHeredocDefineSyntaxRegionCommand
-
-
-	let l:echoString = []
-	call add(l:echoString, 'Cursor at ' . join(l:cursorPosition, ', '))
-	call add(l:echoString, 'Matched the heredoc start pattern: ' . g:heredocStartPattern . ' at row:' . l:cursorHeredocStartRow)
-	call add(l:echoString, 'heredoc start string: ' . l:cursorHeredocStartString)
-	call add(l:echoString, 'heredoc start match list: [' . join(l:cursorHeredocStartMatchList, ', ') . ']')
-	call add(l:echoString, 'heredoc start match list size: ' . len(l:cursorHeredocStartMatchList))
-	call add(l:echoString, 'heredoc start delimiter: ' . l:cursorHeredocStartDelimiter)
-	call add(l:echoString, 'Matched the heredoc end pattern: ' . l:cursorHeredocEndPattern . ' at row: ' . l:cursorHeredocEndRow)
-	call add(l:echoString, 'Define syntax region with: ' . l:cursorHeredocDefineSyntaxRegionCommand)
-
-	call writefile(l:echoString, $HOME . "/heredoc.log")
-
-
-endfunction
-
-
-VIMEOF
 )
 
 VIM_SH_HEREDOC_HIGHLIGHTING=$(cat << 'VIMEOF'
@@ -480,8 +325,10 @@ function! Main()
 		call DefineHeredocSyntaxRegionFor(filetype)
 	endfor
 
-	autocmd CursorMoved * :call UpdateCursorHeredocSyntaxRegion()
+	nnoremap G :call UpdateCursorHeredocSyntaxRegion()<CR>
 endfunction
+
+
 
 function! UpdateCursorHeredocSyntaxRegion()
 	let [l:heredocStartRow, _] = searchpos(g:heredocStartPattern, 'zbnW')
@@ -505,24 +352,27 @@ function! UpdateCursorHeredocSyntaxRegion()
 		return v:null
 	endif
 	
-	if g:previousDefinedHeredocFiletype != v:null
-		let l:previousRegion = 'heredoc' . g:previousDefinedHeredocFiletype
-		if hlexists(l:previousRegion) 
-			execute 'syntax clear ' . l:previousRegion
-		endif
-		if hlexists('@' . l:filetype)
-		endif
+	if g:previousDefinedHeredocFiletype == v:null
+		call DefineHeredocSyntaxRegionFor(l:filetype)
+		let g:previousDefinedHeredocFiletype = l:filetype
+		return v:null
 	endif
 
-	let g:previousDefinedHeredocFiletype = l:filetype
+	let l:previousRegion = 'heredoc' . g:previousDefinedHeredocFiletype
+	if hlexists(l:previousRegion) 
+		execute 'syntax clear ' . l:previousRegion
+		let g:previousDefinedHeredocFiletype = v:null
+		return v:null
+	endif
 
 	call DefineHeredocSyntaxRegionFor(l:filetype)
+	let g:previousDefinedHeredocFiletype = l:filetype
 endfunction
 
 function! DefineHeredocSyntaxRegionFor(filetype)
 	let l:bcs = b:current_syntax
 	unlet b:current_syntax
-	execute "syntax include @" . a:filetype . " syntax/" . a:filetype . ".vim"
+	execute 'silent! syntax include @' . a:filetype . ' syntax/' . a:filetype . '.vim'
 	let b:current_syntax = l:bcs
 
 	let l:region = 'heredoc' . a:filetype
@@ -541,28 +391,8 @@ call Main()
 VIMEOF
 )
 
-HEREDOC_PATTERNS=$(cat << "EOF"
-start="<<\s*\z([^ \t|>]\+\)" end="^\z1$"
-start="<<-\s*\z([^ \t|>]\+\)" end="^\s*\z1$"
-start="<<\s*\\\z([^ \t|>]\+\)" end="^\z1$"
-start="<<-\s*\\\z([^ \t|>]\+\)" end="^\s*\z1$"
-start="<<\s*'\z([^']\+\)'" end="^\z1$"
-start="<<-\s*'\z([^']\+\)'" end="^\s*\z1$"
-start="<<\s*\"\z([^"]\+\)\"" end="^\z1$"
-start="<<-\s*\"\z([^"]\+\)\"" end="^\s*\z1$"
-start="<<\s*\\\_$\_s*\z([^ \t|>]\+\)" end="^\z1$"
-start="<<-\s*\\\_$\_s*\z([^ \t|>]\+\)" end="^\s*\z1$"
-start="<<\s*\\\_$\_s*\\\z([^ \t|>]\+\)" end="^\z1$"
-start="<<-\s*\\\_$\_s*\\\z([^ \t|>]\+\)" end="^\s*\z1$"
-start="<<\s*\\\_$\_s*'\z([^']\+\)'" end="^\z1$"
-start="<<-\s*\\\_$\_s*'\z([^']\+\)'" end="^\s*\z1$"
-start="<<\s*\\\_$\_s*\"\z([^"]\+\)\"" end="^\z1$"
-start="<<-\s*\\\_$\_s*\"\z([^"]\+\)\"" end="^\s*\z1$"
-EOF
-)
 
-
-ZSHRC_CUSTOM=$(cat << "ZSHEOF"
+ZSHRC_CUSTOM=$(cat << "SHEOF"
 #https://getantidote.github.io/install
 zsh_plugins=${ZDOTDIR:-~}/.zsh_plugins.zsh
 [[ -f ${zsh_plugins:r}.txt ]] || touch ${zsh_plugins:r}.txt
@@ -588,7 +418,7 @@ export FZF_BIN_PATH="fzf --bind='ctrl-z:abort'"
 #neovim alias
 alias vim='nvim'
 alias vi='vim'
-ZSHEOF
+SHEOF
 )
 ZSH_PLUGINS_TXT=$(cat << "EOF"
 zsh-users/zsh-autosuggestions

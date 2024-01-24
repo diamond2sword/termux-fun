@@ -109,7 +109,7 @@ add_ssh_key_to_ssh_agent () {
 
 
 declare_ssh_auth_eval () {
-eval "$(cat <<- "EOF"
+eval "$(cat <<- "TCLEOF"
 	ssh_auth_eval () {
 		command="$@"
 		ssh_key_passphrase="$SSH_KEY_PASSPHRASE"
@@ -128,7 +128,7 @@ eval "$(cat <<- "EOF"
 			}
 		EOF2
 	}
-EOF
+TCLEOF
 )"
 }
 
