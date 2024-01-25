@@ -521,9 +521,6 @@ fun configureCacheToRepoTask() {
 					}
 				}
 			}
-			afterEvaluate {
-				val allTasks = getAllTasks(true)
-			}
 		}
 	}
 }
