@@ -1,26 +1,25 @@
 #!/bin/bash
 main() { 
 	yes | {
-#		apt update
-#		apt upgrade
-#		apt update
-#
-#
-#		#man pages
-#		apt install man
-#
-#		#termux-api
-#		apt install termux-api
-#	 
-#		#neovim
-#		apt install neovim
-#		sh -c 'curl -fLo "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
-#		apt install fzf
-#       apt install tree
-#       apt install shellcheck
-#		apt install nodejs
-#		apt install git
-		true
+		apt update
+		apt upgrade
+		apt update
+
+
+		#man pages
+		apt install man
+
+		#termux-api
+		apt install termux-api
+	 
+		#neovim
+		apt install neovim
+		sh -c 'curl -fLo "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
+		apt install fzf
+       	apt install tree
+       	apt install shellcheck
+		apt install nodejs
+		apt install git
 	}
 
 	echo "$INIT_VIM" > ~/.config/nvim/init.vim
@@ -28,20 +27,20 @@ main() {
 	echo "$INIT_LUA" > ~/.config/nvim/lua/lsp/init.lua
 	mkdir -p ~/.config/nvim/after/syntax/sh
 	echo "$VIM_SH_HEREDOC_HIGHLIGHTING" > ~/.config/nvim/after/syntax/sh/heredoc-sh.vim
-#	nvim +'PlugInstall --sync' +qa
-#	nvim +'PlugClean --sync' +qa
-#	#Non-interactive CocInstall with display using Expect
-#	yes | { 
-#		apt install expect
-#	}
-#	extensions=("coc-json" "coc-git" "coc-sh")
-#	for extension in "${extensions[@]}"; do
-#		do_coc_install $extension
-#	done
-#	nvim +'PlugClean --sync' +qa
+	nvim +'PlugInstall --sync' +qa
+	nvim +'PlugClean --sync' +qa
+	#Non-interactive CocInstall with display using Expect
+	yes | { 
+		apt install expect
+	}
+	extensions=("coc-json" "coc-git" "coc-sh")
+	for extension in "${extensions[@]}"; do
+		do_coc_install "$extension"
+	done
+	nvim +'PlugClean --sync' +qa
 
 	yes | {
-		false && (
+		(
 			#kotlin lsp
 			apt install bat
 			echo "$COC_CONFIG" > ~/.config/nvim/coc-settings.json
@@ -53,32 +52,32 @@ main() {
 			cp -rf server ~/lsp/kotlin
 			rm -rf server server.zip
 		)
-#	 
-#		#zsh
-#		apt install zsh
+	 
+		#zsh
+		apt install zsh
 
-#		sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"	
-#		git clone --depth=1 https://github.com/mattmc3/antidote.git ${ZDOTDIR:-$HOME}/.antidote
+		sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"	
+		git clone --depth=1 https://github.com/mattmc3/antidote.git "${ZDOTDIR:-$HOME}/.antidote"
 		echo "$ZSH_PLUGINS_TXT" > ~/.zsh_plugins.txt
 		echo "$ZSHRC_CUSTOM" > ~/.zshrc_custom
 		sed -i '/\#ZSHRC_CUSTOM/d' ~/.zshrc
 		echo 'source ~/.zshrc_custom #ZSHRC_CUSTOM' >> ~/.zshrc 
-#
-#		#git
-#		git clone https://www.github.com/diamond2sword/termux-fun
-#		cp -rf ~/termux-fun/project ~/termux-fun/install-setup.bash $HOME
-#		apt install openssh
+
+		#git
+		git clone https://www.github.com/diamond2sword/termux-fun
+		cp -rf ~/termux-fun/project ~/termux-fun/install-setup.bash "$HOME"
+		apt install openssh
 	
 		
 	}
 
 	#gradle
-#	apt install gradle
+	apt install gradle
 	echo "$OFFLINE_INIT_GRADLE_KTS" > ~/.gradle/init.d/offline.init.gradle.kts
 	echo "$OPTIMIZE_INIT_GRADLE_KTS" > ~/.gradle/init.d/optimize.init.gradle.kts
-	false && (
+	(
 		#gradle needs internet
-		cd project
+		cd project || exit
 		./gradlew --stop
 		./gradlew clean build \
 			--refresh-dependencies \
@@ -88,25 +87,25 @@ main() {
 			-PisVerboseCacheToRepo=false
 	)
 
-#	#because antidote has to install plugins for zsh
-#	chsh -s zsh
-#	echo "sed -i '/\#FIRST_START/d' ~/.zshrc; exit #FIRST_START" >> ~/.zshrc
-#	zsh
+	#because antidote has to install plugins for zsh
+	chsh -s zsh
+	echo "sed -i '/\#FIRST_START/d' ~/.zshrc; exit #FIRST_START" >> ~/.zshrc
+	zsh
 
-#	yes | {
-#		#https://github.com/andrewferrier/fzf-z#pre-requisites
-#		export FZFZ_SCRIPT_PATH=~/.cache/antidote/https-COLON--SLASH--SLASH-github.com-SLASH-andrewferrier-SLASH-fzf-z
-#		mkdir -p $FZFZ_SCRIPT_PATH
-#		curl https://raw.githubusercontent.com/rupa/z/master/z.sh > "$FZFZ_SCRIPT_PATH/z.sh"
-#
-#		#termux JetBrainsMono font
-#		curl -LJO https://download.jetbrains.com/fonts/JetBrainsMono-2.304.zip
-#		unzip ~/JetBrainsMono-2.304.zip -d ~/font
-#		cp ~/font/fonts/ttf/JetBrainsMono-Regular.ttf ~/.termux/font.ttf
-#		rm JetBrainsMono-2.304.zip
-#		rm -rf ~/font
-#		termux-reload-settings
-#	}
+	yes | {
+		#https://github.com/andrewferrier/fzf-z#pre-requisites
+		export FZFZ_SCRIPT_PATH=~/.cache/antidote/https-COLON--SLASH--SLASH-github.com-SLASH-andrewferrier-SLASH-fzf-z
+		mkdir -p $FZFZ_SCRIPT_PATH
+		curl https://raw.githubusercontent.com/rupa/z/master/z.sh > "$FZFZ_SCRIPT_PATH/z.sh"
+
+		#termux JetBrainsMono font
+		curl -LJO https://download.jetbrains.com/fonts/JetBrainsMono-2.304.zip
+		unzip ~/JetBrainsMono-2.304.zip -d ~/font
+		cp ~/font/fonts/ttf/JetBrainsMono-Regular.ttf ~/.termux/font.ttf
+		rm JetBrainsMono-2.304.zip
+		rm -rf ~/font
+		termux-reload-settings
+	}
 }
 
 do_coc_install () {
@@ -446,36 +445,6 @@ COC_CONFIG=$(cat << "JSONEOF"
 			"initializationOptions": {
 		      	"storagePath": "~/lsp/kotlin/caches"
 		   	}
-		}
-	}
-}
-JSONEOF
-)
-
-TEMP=$(cat << "JSONEOF"
-{
-	"coc.preferences.jvmHeapSize": 2048,
-	"languageserver": {
-		"kotlin": {
-		    "command": "~/lsp/kotlin/server/bin/kotlin-language-server",
-			"args": ["-Xmx2g", "-J-Xmx2g"],
-	    	"filetypes": ["kotlin"],
-			"memory": {
-        		"maxHeap": "2G"
-	      	},
-			"javaServerRuntime": {
-        		"maxHeap": "2G"
-      		},
-			"initializationOptions": {
-        		"compilerOptions": {
-          			"jvm": true
-  		      	},
-				"jvm": {
-	          		"maximumHeapSize": "2G" 
-	      		}
-			},
-			"javaHome": "$JAVA_HOME",
-      		"javaServerOptions": ["-Xmx2g"]
 		}
 	}
 }
