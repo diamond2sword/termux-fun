@@ -74,8 +74,9 @@ main() {
 	#gradle
 	yes | {
 		apt install gradle
-		echo "$OFFLINE_INIT_GRADLE_KTS" > ~/.gradle/init.d/offline.init.gradle.kts
-	}
+  	}
+   	mkdir -p ~/.gradle/init.d
+	echo "$OFFLINE_INIT_GRADLE_KTS" > ~/.gradle/init.d/offline.init.gradle.kts
 	echo "$OPTIMIZE_INIT_GRADLE_KTS" > ~/.gradle/init.d/optimize.init.gradle.kts
 	(
 		#gradle needs internet
