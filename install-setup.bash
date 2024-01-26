@@ -22,10 +22,10 @@ main() {
 		apt install git
 	}
 
-	echo "$INIT_VIM" > ~/.config/nvim/init.vim
 	mkdir -p ~/.config/nvim/lua/lsp
+ 	mkdir -p ~/.config/nvim/after/syntax/sh
+	echo "$INIT_VIM" > ~/.config/nvim/init.vim
 	echo "$INIT_LUA" > ~/.config/nvim/lua/lsp/init.lua
-	mkdir -p ~/.config/nvim/after/syntax/sh
 	echo "$VIM_SH_HEREDOC_HIGHLIGHTING" > ~/.config/nvim/after/syntax/sh/heredoc-sh.vim
 	nvim +'PlugInstall --sync' +qa
 	nvim +'PlugClean --sync' +qa
