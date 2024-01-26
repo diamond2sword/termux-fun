@@ -14,7 +14,7 @@ main() {
 	 
 		#neovim
 		apt install neovim
-		sh -c 'curl -fLo "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
+		sh -c 'curl -fLo ${XDG_DATA_HOME:-$HOME/.local/share}/nvim/site/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
 		apt install fzf
        	apt install tree
        	apt install shellcheck
@@ -72,8 +72,10 @@ main() {
 	}
 
 	#gradle
-	apt install gradle
-	echo "$OFFLINE_INIT_GRADLE_KTS" > ~/.gradle/init.d/offline.init.gradle.kts
+	yes | {
+		apt install gradle
+		echo "$OFFLINE_INIT_GRADLE_KTS" > ~/.gradle/init.d/offline.init.gradle.kts
+	}
 	echo "$OPTIMIZE_INIT_GRADLE_KTS" > ~/.gradle/init.d/optimize.init.gradle.kts
 	(
 		#gradle needs internet
