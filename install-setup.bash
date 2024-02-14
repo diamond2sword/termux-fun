@@ -491,11 +491,6 @@ fun configureCacheToRepoTask() {
 				val isVerbose = isVerboseCacheToRepo?.toBooleanStrictOrNull()
 				cacheToRepo(mustSkip, isVerbose)
 			}
-			tasks.register("cacheToRepo") {
-				doLast {
-					cacheToRepoInteractive()
-				}
-			}
 			taskGraph.whenReady {
 				val userSpecifiedTasks = startParameter.taskNames
 				val allTasks = taskGraph.getAllTasks()
