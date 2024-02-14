@@ -502,7 +502,7 @@ fun configureCacheToRepoTask() {
 				if (userSpecifiedTasks.isNotEmpty()) {
 					val lastTask = allTasks.last()
 					lastTask.doLast {
-						cacheToRepo()	
+						cacheToRepoInteractive()	
 					}
 				}
 			}
