@@ -48,10 +48,6 @@ main() {
 	echo "$COC_CONFIG" > ~/.config/nvim/coc-settings.json
 	echo "$ZSH_PLUGINS_TXT" > ~/.zsh_plugins.txt
 	echo "$ZSHRC_CUSTOM" > ~/.zshrc_custom
-	touch ~/.zshrc
-	sed -i '/\#ZSHRC_CUSTOM/d' ~/.zshrc
-	echo 'source ~/.zshrc_custom #ZSHRC_CUSTOM' >> ~/.zshrc 
-
 
 	yes | {
 		(
@@ -103,6 +99,8 @@ main() {
 		#because antidote has to install plugins for zsh
 		chsh -s zsh
 		echo "sed -i '/\#FIRST_START/d' ~/.zshrc; exit #FIRST_START" >> ~/.zshrc
+		sed -i '/\#ZSHRC_CUSTOM/d' ~/.zshrc
+		echo 'source ~/.zshrc_custom #ZSHRC_CUSTOM' >> ~/.zshrc 
 	}
 
 	#https://github.com/andrewferrier/fzf-z#pre-requisites
