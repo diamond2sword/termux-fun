@@ -117,8 +117,7 @@ COC_EXTENSION=$1 expect <<- "EOF"
 	set cocExtension $env(COC_EXTENSION)
 	spawn nvim
 	send ":CocInstall $cocExtension\r"
-
-	expect_before -re "Move extension" {
+	expect_before -re "Move" {
 		exec sleep 1
 		send "qa!\r"
 	}
