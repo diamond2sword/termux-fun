@@ -525,14 +525,14 @@ fun addLocalRepo() {
 }
 
 fun RepositoryHandler.addRepos(repos: List<File>?) {
-	mavenCentral()
-	google()
-	gradlePluginPortal()
 	maven {
 		repos?.forEach { repo ->
 			setUrl(repo.toURI())
 		}
 	}
+	gradlePluginPortal()
+	mavenCentral()
+	google()
 }
 
 
