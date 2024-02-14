@@ -1,5 +1,5 @@
 #!/bin/bash
-main() { 
+main () { 
 	yes | {
 		apt update
 		apt upgrade
@@ -99,9 +99,10 @@ main() {
 		#because antidote has to install plugins for zsh
 		chsh -s zsh
 		echo "sed -i '/\#FIRST_START/d' ~/.zshrc; exit #FIRST_START" >> ~/.zshrc
-		sed -i '/\#ZSHRC_CUSTOM/d' ~/.zshrc
-		echo 'source ~/.zshrc_custom #ZSHRC_CUSTOM' >> ~/.zshrc 
 	}
+
+	sed -i '/\#ZSHRC_CUSTOM/d' ~/.zshrc
+	echo 'source ~/.zshrc_custom #ZSHRC_CUSTOM' >> ~/.zshrc 
 
 	#https://github.com/andrewferrier/fzf-z#pre-requisites
 	export FZFZ_SCRIPT_PATH=~/.cache/antidote/https-COLON--SLASH--SLASH-github.com-SLASH-andrewferrier-SLASH-fzf-z
