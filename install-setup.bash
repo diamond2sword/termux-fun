@@ -23,27 +23,40 @@ main() {
 	}
 
 	mkdir -p ~/.config/nvim/lua/lsp
- 	mkdir -p ~/.config/nvim/after/syntax/sh
+	mkdir -p ~/.config/nvim/after/syntax/sh
 	echo "$INIT_VIM" > ~/.config/nvim/init.vim
 	echo "$INIT_LUA" > ~/.config/nvim/lua/lsp/init.lua
 	echo "$VIM_SH_HEREDOC_HIGHLIGHTING" > ~/.config/nvim/after/syntax/sh/heredoc-sh.vim
-	nvim +'PlugInstall --sync' +qa
-	nvim +'PlugClean --sync' +qa
-	#Non-interactive CocInstall with display using Expect
-	yes | { 
-		apt install expect
+
+	{
+		nvim +'PlugInstall --sync' +qa
+		nvim +'PlugClean --sync' +qa
 	}
-	extensions=("coc-json" "coc-git" "coc-sh")
-	for extension in "${extensions[@]}"; do
-		do_coc_install "$extension"
-	done
-	nvim +'PlugClean --sync' +qa
+
+	{
+		#Non-interactive CocInstall with display using Expect
+		yes | { 
+			apt install expect
+		}
+		extensions=("coc-json" "coc-git" "coc-sh")
+		for extension in "${extensions[@]}"; do
+			do_coc_install "$extension"
+		done
+		nvim +'PlugClean --sync' +qa
+	}
+
+	echo "$COC_CONFIG" > ~/.config/nvim/coc-settings.json
+	echo "$ZSH_PLUGINS_TXT" > ~/.zsh_plugins.txt
+	echo "$ZSHRC_CUSTOM" > ~/.zshrc_custom
+	touch ~/.zshrc
+	sed -i '/\#ZSHRC_CUSTOM/d' ~/.zshrc
+	echo 'source ~/.zshrc_custom #ZSHRC_CUSTOM' >> ~/.zshrc 
+
 
 	yes | {
 		(
 			#kotlin lsp
 			apt install bat
-			echo "$COC_CONFIG" > ~/.config/nvim/coc-settings.json
 			apt install unzip
 			curl -LJO https://github.com/fwcd/kotlin-language-server/releases/download/1.3.7/server.zip
 			unzip server.zip
@@ -58,26 +71,22 @@ main() {
 
 		sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"	
 		git clone --depth=1 https://github.com/mattmc3/antidote.git "${ZDOTDIR:-$HOME}/.antidote"
-		echo "$ZSH_PLUGINS_TXT" > ~/.zsh_plugins.txt
-		echo "$ZSHRC_CUSTOM" > ~/.zshrc_custom
-		sed -i '/\#ZSHRC_CUSTOM/d' ~/.zshrc
-		echo 'source ~/.zshrc_custom #ZSHRC_CUSTOM' >> ~/.zshrc 
 
 		#git
 		git clone https://www.github.com/diamond2sword/termux-fun
 		cp -rf ~/termux-fun/project ~/termux-fun/install-setup.bash "$HOME"
 		apt install openssh
-	
-		
 	}
 
 	#gradle
 	yes | {
 		apt install gradle
   	}
+
    	mkdir -p ~/.gradle/init.d
 	echo "$OFFLINE_INIT_GRADLE_KTS" > ~/.gradle/init.d/offline.init.gradle.kts
 	echo "$OPTIMIZE_INIT_GRADLE_KTS" > ~/.gradle/init.d/optimize.init.gradle.kts
+
 	(
 		#gradle needs internet
 		cd project || exit
@@ -90,15 +99,17 @@ main() {
 			-PisVerboseCacheToRepo=false
 	)
 
-	#because antidote has to install plugins for zsh
-	chsh -s zsh
-	echo "sed -i '/\#FIRST_START/d' ~/.zshrc; exit #FIRST_START" >> ~/.zshrc
-	zsh
+	{
+		#because antidote has to install plugins for zsh
+		chsh -s zsh
+		echo "sed -i '/\#FIRST_START/d' ~/.zshrc; exit #FIRST_START" >> ~/.zshrc
+	}
 
+	#https://github.com/andrewferrier/fzf-z#pre-requisites
+	export FZFZ_SCRIPT_PATH=~/.cache/antidote/https-COLON--SLASH--SLASH-github.com-SLASH-andrewferrier-SLASH-fzf-z
+	mkdir -p $FZFZ_SCRIPT_PATH
+	
 	yes | {
-		#https://github.com/andrewferrier/fzf-z#pre-requisites
-		export FZFZ_SCRIPT_PATH=~/.cache/antidote/https-COLON--SLASH--SLASH-github.com-SLASH-andrewferrier-SLASH-fzf-z
-		mkdir -p $FZFZ_SCRIPT_PATH
 		curl https://raw.githubusercontent.com/rupa/z/master/z.sh > "$FZFZ_SCRIPT_PATH/z.sh"
 
 		#termux JetBrainsMono font
@@ -117,9 +128,12 @@ COC_EXTENSION=$1 expect <<- "EOF"
 	set cocExtension $env(COC_EXTENSION)
 	spawn nvim
 	send ":CocInstall $cocExtension\r"
-	expect_before -re "Move" {
-		exec sleep 1
-		send "qa!\r"
+	expect_before -re "Installi" {
+		send ":wincmd w|q\r"
+		expect_before -re "Move|e ext" {
+			send ":q\r"	
+		}
+		expect eof
 	}
 	expect eof
 EOF
@@ -513,6 +527,7 @@ fun addLocalRepo() {
 fun RepositoryHandler.addRepos(repos: List<File>?) {
 	mavenCentral()
 	google()
+	gradlePluginPortal()
 	maven {
 		repos?.forEach { repo ->
 			setUrl(repo.toURI())
