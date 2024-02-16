@@ -5,7 +5,6 @@ main () {
 		apt upgrade
 		apt update
 
-
 		#man pages
 		apt install man
 
@@ -49,8 +48,7 @@ main () {
 	echo "$ZSH_PLUGINS_TXT" > ~/.zsh_plugins.txt
 	echo "$ZSHRC_CUSTOM" > ~/.zshrc_custom
 
-	yes | {
-		(
+	yes | (
 			#kotlin lsp
 			apt install bat
 			apt install unzip
@@ -62,18 +60,6 @@ main () {
 			rm -rf server server.zip
 		)
 	 
-		#zsh
-		apt install zsh
-
-		sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"	
-		git clone --depth=1 https://github.com/mattmc3/antidote.git "${ZDOTDIR:-$HOME}/.antidote"
-
-		#git
-		git clone https://www.github.com/diamond2sword/termux-fun
-		cp -rf ~/termux-fun/project ~/termux-fun/install-setup.bash "$HOME"
-		apt install openssh
-	}
-
 	#gradle
 	yes | {
 		apt install gradle
@@ -96,21 +82,21 @@ main () {
 	)
 
 	{
+		#zsh
+		apt install zsh
+
+		sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"	
+		git clone --depth=1 https://github.com/mattmc3/antidote.git "${ZDOTDIR:-$HOME}/.antidote"
+
 		#because antidote has to install plugins for zsh
 		chsh -s zsh
-		echo "sed -i '/\#FIRST_START/d' ~/.zshrc; exit #FIRST_START" >> ~/.zshrc
+		sed -i '/\#ZSHRC_CUSTOM/d' ~/.zshrc
+		echo 'source ~/.zshrc_custom #ZSHRC_CUSTOM' >> ~/.zshrc
+		echo "sed -i '/\#FIRST_START/d' ~/.zshrc; source ~/.zshrc_first_start #FIRST_START" >> ~/.zshrc
+		echo "$ZSHRC_FIRST_START" > ~/.zshrc_first_start
 	}
 
-	sed -i '/\#ZSHRC_CUSTOM/d' ~/.zshrc
-	echo 'source ~/.zshrc_custom #ZSHRC_CUSTOM' >> ~/.zshrc 
-
-	#https://github.com/andrewferrier/fzf-z#pre-requisites
-	export FZFZ_SCRIPT_PATH=~/.cache/antidote/https-COLON--SLASH--SLASH-github.com-SLASH-andrewferrier-SLASH-fzf-z
-	mkdir -p $FZFZ_SCRIPT_PATH
-	
 	yes | {
-		curl https://raw.githubusercontent.com/rupa/z/master/z.sh > "$FZFZ_SCRIPT_PATH/z.sh"
-
 		#termux JetBrainsMono font
 		curl -LJO https://download.jetbrains.com/fonts/JetBrainsMono-2.304.zip
 		unzip ~/JetBrainsMono-2.304.zip -d ~/font
@@ -118,6 +104,13 @@ main () {
 		rm JetBrainsMono-2.304.zip
 		rm -rf ~/font
 		termux-reload-settings
+	}
+
+	{
+		#git
+		git clone https://www.github.com/diamond2sword/termux-fun
+		cp -rf ~/termux-fun/project ~/termux-fun/install-setup.bash "$HOME"
+		apt install openssh
 	}
 }
 
@@ -406,7 +399,7 @@ VIMEOF
 )
 
 
-ZSHRC_CUSTOM=$(cat << "SHEOF"
+ZSHRC_CUSTOM=$(cat << "BASHEOF"
 #https://getantidote.github.io/install
 zsh_plugins=${ZDOTDIR:-~}/.zsh_plugins.zsh
 [[ -f ${zsh_plugins:r}.txt ]] || touch ${zsh_plugins:r}.txt
@@ -432,8 +425,17 @@ export FZF_BIN_PATH="fzf --bind='ctrl-z:abort'"
 #neovim alias
 alias vim='nvim'
 alias vi='vim'
-SHEOF
+BASHEOF
 )
+ZSHRC_FIRST_START=$(cat << "BASHEOF"
+#https://github.com/andrewferrier/fzf-z#pre-requisites
+export FZFZ_SCRIPT_PATH=~/.cache/antidote/https-COLON--SLASH--SLASH-github.com-SLASH-andrewferrier-SLASH-fzf-z
+mkdir -p $FZFZ_SCRIPT_PATH
+curl https://raw.githubusercontent.com/rupa/z/master/z.sh > "$FZFZ_SCRIPT_PATH/z.sh"
+exit
+BASHEOF
+)
+
 ZSH_PLUGINS_TXT=$(cat << "EOF"
 zsh-users/zsh-autosuggestions
 
@@ -474,7 +476,7 @@ main()
 KOTLINEOF
 )
 
-OFFLINE_INIT_GRADLE_KTS=$(cat << "KOTLINEOF"
+OFFLINE_INIT_GRADLE_KTS=$(cat << "EOF"
 fun main() {
 	addLocalRepo()
 	configureCacheToRepoTask()
@@ -605,7 +607,7 @@ fun cacheToRepo(mustSkip: Boolean? = null, isVerboseParam: Boolean? = null) {
 }
 
 main()
-KOTLINEOF
+EOF
 )
 
 main "$@"
