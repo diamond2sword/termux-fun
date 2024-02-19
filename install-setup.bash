@@ -1,5 +1,13 @@
 #!/bin/bash
-main () { 
+main () {
+	#reset neovim
+	yes | {
+		rm -rf ~/.local/share/nvim
+		rm -rf ~/.config/nvim
+		rm -rf ~/.config/coc
+		apt-get purge neovim
+	}
+
 	yes | {
 		apt update
 		apt upgrade
@@ -26,22 +34,24 @@ main () {
 	echo "$INIT_VIM" > ~/.config/nvim/init.vim
 	echo "$INIT_LUA" > ~/.config/nvim/lua/lsp/init.lua
 	echo "$VIM_SH_HEREDOC_HIGHLIGHTING" > ~/.config/nvim/after/syntax/sh/heredoc-sh.vim
-
+	
 	{
-		nvim +'PlugInstall --sync' +qa
-		nvim +'PlugClean --sync' +qa
-	}
-
-	{
-		#Non-interactive CocInstall with display using Expect
-		yes | { 
-			apt install expect
+		{
+			nvim +'PlugInstall --sync' +qa
+			nvim +'PlugClean --sync' +qa
 		}
-		extensions=("coc-json" "coc-git" "coc-sh")
-		for extension in "${extensions[@]}"; do
-			do_coc_install "$extension"
-		done
-		nvim +'PlugClean --sync' +qa
+
+		{
+			#Non-interactive CocInstall with display using Expect
+			yes | { 
+				apt install expect
+			}
+			extensions=("coc-json" "coc-git" "coc-sh")
+			for extension in "${extensions[@]}"; do
+				do_coc_install "$extension"
+			done
+			nvim +'PlugClean --sync' +qa
+		}
 	}
 
 	echo "$COC_CONFIG" > ~/.config/nvim/coc-settings.json
@@ -49,16 +59,20 @@ main () {
 	echo "$ZSHRC_CUSTOM" > ~/.zshrc_custom
 
 	yes | (
-			#kotlin lsp
-			apt install bat
-			apt install unzip
-			curl -LJO https://github.com/fwcd/kotlin-language-server/releases/download/1.3.7/server.zip
-			unzip server.zip
-			rm -rf ~/lsp
-			mkdir -p ~/lsp/kotlin
-			cp -rf server ~/lsp/kotlin
-			rm -rf server server.zip
-		)
+		#kotlin lsp
+		apt install bat
+		apt install unzip
+		if [ -f ~/lsp/kotlin/server/bin/kotlin-language-server ]; then
+			#escape downloading if kotlin lsp exists
+			exit
+		fi
+		curl -LJO https://github.com/fwcd/kotlin-language-server/releases/download/1.3.7/server.zip
+		unzip server.zip
+		rm -rf ~/lsp
+		mkdir -p ~/lsp/kotlin
+		cp -rf server ~/lsp/kotlin
+		rm -rf server server.zip
+	)
 	 
 	#gradle
 	yes | {
@@ -69,19 +83,42 @@ main () {
 	echo "$OFFLINE_INIT_GRADLE_KTS" > ~/.gradle/init.d/offline.init.gradle.kts
 	echo "$OPTIMIZE_INIT_GRADLE_KTS" > ~/.gradle/init.d/optimize.init.gradle.kts
 
-	(
-		#gradle needs internet
-		cd project || exit
-		./gradlew --stop
-		./gradlew clean build \
-			--refresh-dependencies \
-			--build-cache \
-			-Dorg.gradle.jvmargs="-Xmx2g" \
-			-PmustSkipCacheToRepo=false \
-			-PisVerboseCacheToRepo=false
-	)
-
 	{
+		(
+			#git
+			if [ -d ~/termux-fun ]; then
+				#exit if repo termux-fun exists
+				exit
+			fi
+			git clone https://www.github.com/diamond2sword/termux-fun
+			cp -rf ~/termux-fun/project ~/termux-fun/install-setup.bash "$HOME"
+			apt install openssh
+		)
+
+		(
+			#gradle needs internet
+			cd project || exit
+			gradle --stop
+			gradle clean build \
+				--refresh-dependencies \
+				--build-cache \
+				-Dorg.gradle.jvmargs="-Xmx2g" \
+				-PmustSkipCacheToRepo=false \
+				-PisVerboseCacheToRepo=false
+		)
+	}
+
+	yes | {
+		#termux JetBrainsMono font
+		curl -LJO https://download.jetbrains.com/fonts/JetBrainsMono-2.304.zip
+		unzip ~/JetBrainsMono-2.304.zip -d ~/font
+		cp ~/font/fonts/ttf/JetBrainsMono-Regular.ttf ~/.termux/font.ttf
+		rm JetBrainsMono-2.304.zip
+		rm -rf ~/font
+		termux-reload-settings
+	}
+	
+	yes | {
 		#zsh
 		apt install zsh
 
@@ -95,23 +132,6 @@ main () {
 		echo "sed -i '/\#FIRST_START/d' ~/.zshrc; source ~/.zshrc_first_start #FIRST_START" >> ~/.zshrc
 		echo "$ZSHRC_FIRST_START" > ~/.zshrc_first_start
 	}
-
-	yes | {
-		#termux JetBrainsMono font
-		curl -LJO https://download.jetbrains.com/fonts/JetBrainsMono-2.304.zip
-		unzip ~/JetBrainsMono-2.304.zip -d ~/font
-		cp ~/font/fonts/ttf/JetBrainsMono-Regular.ttf ~/.termux/font.ttf
-		rm JetBrainsMono-2.304.zip
-		rm -rf ~/font
-		termux-reload-settings
-	}
-
-	{
-		#git
-		git clone https://www.github.com/diamond2sword/termux-fun
-		cp -rf ~/termux-fun/project ~/termux-fun/install-setup.bash "$HOME"
-		apt install openssh
-	}
 }
 
 do_coc_install () {
@@ -122,8 +142,8 @@ COC_EXTENSION=$1 expect <<- "EOF"
 	send ":CocInstall $cocExtension\r"
 	expect_before -re "Installi" {
 		send ":wincmd w|q\r"
-		expect_before -re "Move|e ext" {
-			send ":q\r"	
+		expect_before -re "Move|e ext|finished" {
+			send ":q\r"
 		}
 		expect eof
 	}
@@ -611,4 +631,6 @@ EOF
 )
 
 main "$@"
-exit
+while true; do
+	exit
+done
