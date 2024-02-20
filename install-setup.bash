@@ -570,7 +570,7 @@ fun cacheToRepo(mustSkip: Boolean? = null, isVerboseParam: Boolean? = null) {
 	val includedFiletypes = listOf(".jar", ".pom")
 
 	val cacheDir = file("${gradle.gradleUserHomeDir}/caches/modules-2/files-2.1")
-	val customRepoDir = file("${gradle.gradleUserHomeDir}/m2")
+	val customRepoDir = file("${gradle.gradleUserHomeDir}/repos/m2")
 
 	println("cacheToRepo task is called.")
 	println("cacheDir: $cacheDir")
