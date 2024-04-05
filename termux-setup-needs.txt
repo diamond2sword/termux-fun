@@ -10,9 +10,30 @@ Iteration 2
 		imagemagick
 		man
 		neovim
-			~/.config/nvim/after/syntax/*
+			~/.config/nvim/after/syntax/text/
+				sh
+					heredoc-sh.vim
+				text
+					advance-word-wrap.vim
+					clipboard.vim
+					diff.vim
+					sed.vim
 			~/.config/nvim/init.vim
-			~/.config/nvim/plugged/*
+			~/.config/nvim/plugged
+				coc.nvim
+					~/lsp/kotlin/server/bin/kotlin-language-server
+					coc-json
+					coc-git
+					coc-sh
+					~/.config/nvim/coc-settings.json
+				fzf
+				fzf.vim
+				gruvbox
+				lightline.vim
+				vim-lightline-coc
+				vim-man
+				vim-polyglot
+				vim-rainbow
 		nodejs
 			npm list -g --depth 0
 				@types/node
@@ -30,6 +51,24 @@ Iteration 2
 		tree
 		unzip
 		zsh
+			antidote
+				zsh-users/zsh-autosuggestions
+				rupa/z
+				agkozak/zsh-z
+				ohmyzsh/ohmyzsh path:plugins/fzf
+				ohmyzsh/ohmyzsh path:plugins/git
+				andrewferrier/fzf-z
+			oh-my-zsh
+				~/.zshrc
+				~/.zshrc_custom
+				~/.zshrc_first_start
+	repos
+		~/termux-fun
+		~/study
+		~/npm-fun
+	misc
+		~/.termux/font.ttf
+
 
 Iteration 1
 	packages
