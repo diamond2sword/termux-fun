@@ -1,0 +1,45 @@
+Iteration 2
+	packages
+		bat
+		curl
+		expect
+		file
+		fzf
+		git
+		gradle
+		imagemagick
+		man
+		neovim
+			~/.config/nvim/after/syntax/*
+			~/.config/nvim/init.vim
+			~/.config/nvim/plugged/*
+		nodejs
+			npm list -g --depth 0
+				@types/node
+				ts-node
+				typescript
+		openssh
+		pandoc
+		pdf2svg
+		pdftk
+		qpdf
+		shellcheck
+		shfmt
+		termux-api
+		texlive-bin
+		tree
+		unzip
+		zsh
+
+Iteration 1
+	packages
+		nvim
+			~/.config/nvim/after/syntax/*
+			~/.config/nvim/init.vim
+			~/.config/nvim/plugged/*
+		zsh
+		fzf
+	repos
+		~/termux-fun
+		~/study
+		
