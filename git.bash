@@ -12,7 +12,7 @@ declare_strings () {
 	REPO_NAME="termux-fun"
 	GH_EMAIL="diamond2sword@gmail.com"
 	GH_NAME="diamond2sword"
-	GH_PASSWORD="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"
+	GH_PASSWORD="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"
 	SSH_KEY_PASSPHRASE="for(;C==0;){std::cout<<C++}"
 	DEFAULT_GIT_COMMAND_NAME="GIT_RESET"
 	THIS_FILE_NAME="git.bash"
@@ -63,6 +63,10 @@ declare_git_commands () {
 		git commit -m "$COMMIT_NAME"
 		git remote set-url origin "$SSH_REPO_URL"
 		ssh_auth_eval "git push -u origin $BRANCH_NAME"
+	}
+
+	clone_private () {
+		git clone "https://$GH_NAME:$GH_PASSWORD@github.com/$GH_NAME/$REPO_NAME" "$REPO_PATH"
 	}
 
 	reset () {
