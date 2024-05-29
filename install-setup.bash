@@ -139,9 +139,27 @@ main () {
 		apt install imagemagick pandoc pdf2svg pdftk qpdf
 
 		#study
-		cp termux-fun/git.bash $HOME
-		bash ~/git.bash clone_private
+		git-bash clone study
+
+		#coding stuffs
+		{
+			# c++
+			git-bash clone cpp-fun
+			apt install clang
+		}
+		{
+			# assembly
+			git-bash clone asm-fun
+			apt install binutils
+		}
+		git-bash clone c-fun
+		git-bash clone bash-fun
+		git-bash clone audio-shop
 	}
+}
+
+git-bash () {
+	bash $HOME/termux-fun/git.bash "$@"
 }
 
 do_coc_install () {
