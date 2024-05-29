@@ -154,7 +154,7 @@ main () {
 		}
 		git-bash clone c-fun
 		git-bash clone bash-fun
-		git-bash clone 
+		git-bash clone cpp-fun
 	}
 }
 
