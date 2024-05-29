@@ -24,7 +24,7 @@ declare_strings () {
 	SSH_REPO_DIR="$REPO_PATH/$SSH_DIR_NAME"
 	COMMIT_NAME="update project"
 	SSH_KEY_PASSPHRASE="for(;C==0;){std::cout<<C++}"
-	GH_PASSWORD="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"
+	GH_PASSWORD="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"
 	REPO_URL="https://github.com/$GH_NAME/$REPO_NAME"
 	SSH_REPO_URL="git@github.com:$GH_NAME/$REPO_NAME"
 }
@@ -71,7 +71,7 @@ declare_git_commands () {
 	}
 
 	reset_credentials () {
-		cd "$REPO_PATH" || exit
+		cd "$REPO_PATH" || return
 		git config --global --unset credential.helper
 		git config --system --unset credential.helper
 		git config --global user.name "$GH_NAME"
@@ -91,32 +91,6 @@ declare_git_commands () {
 		mkdir -p "$REPO_PATH"
 		cd "$REPO_PATH" || exit
 		git clone "$REPO_URL" "$REPO_PATH"
-	}
-
-	config () {
-		local KEY_NAME="$1"
-		local NEW_VALUE="$2"
-		[[ "$KEY_NAME" == "REPO_NAME" ]] && {
-			REPO_NAME="$NEW_VALUE"
-		}
-		sed -i '{
-			/^declare_strings/{
-				:start
-				/\n\}/!{
-					/'"$KEY_NAME"'=/{
-						b found
-					}
-					n
-					b start
-				}
-				b exit
-				:found
-				/^declare_strings/!{
-					s/'"$KEY_NAME"'=.*$/'"$KEY_NAME"'="'"$NEW_VALUE"'"/
-				}
-			}
-			:exit
-		}' "$ROOT_PATH/$REPO_NAME/$THIS_FILE_NAME"
 	}
 }
 

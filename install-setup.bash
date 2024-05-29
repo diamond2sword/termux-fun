@@ -132,6 +132,17 @@ main () {
 		echo "sed -i '/\#FIRST_START/d' ~/.zshrc; source ~/.zshrc_first_start #FIRST_START" >> ~/.zshrc
 		echo "$ZSHRC_FIRST_START" > ~/.zshrc_first_start
 	}
+
+	yes | {
+		#misc
+		apt install file shfmt
+		apt install imagemagick pandoc pdf2svg pdftk qpdf
+
+		#study
+		cp termux-fun/git.bash $HOME
+		bash ~/git.bash config REPO_NAME study
+		bash ~/git.bash clone_private
+	}
 }
 
 do_coc_install () {
@@ -631,6 +642,7 @@ EOF
 )
 
 main "$@"
+
 while true; do
 	exit
 done
