@@ -66,8 +66,9 @@ declare_git_commands () {
 		ssh_auth_eval "git rebase --continue"
 	}
 	
-	clone_private () {
-		git clone "https://$GH_NAME:$GH_PASSWORD@github.com/$GH_NAME/$REPO_NAME" "$REPO_PATH"
+	clone () {
+		local repo_name="$1"
+		git clone "https://$GH_NAME:$GH_PASSWORD@github.com/$GH_NAME/$repo_name" "$HOME/$repo_name"
 	}
 
 	reset_credentials () {
@@ -87,10 +88,9 @@ declare_git_commands () {
 	}
 
 	reclone () {
-		rm -r -f "$REPO_PATH"
-		mkdir -p "$REPO_PATH"
-		cd "$REPO_PATH" || exit
-		git clone "$REPO_URL" "$REPO_PATH"
+		local repo_name="$1"
+		rm -rf "$HOME/$repo_name"
+		git clone "https://$GH_NAME:$GH_PASSWORD@github.com/$GH_NAME/$repo_name" "$HOME/$repo_name"
 	}
 }
 

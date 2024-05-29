@@ -140,7 +140,6 @@ main () {
 
 		#study
 		cp termux-fun/git.bash $HOME
-		bash ~/git.bash config REPO_NAME study
 		bash ~/git.bash clone_private
 	}
 }
