@@ -61,7 +61,7 @@ exec_git_command () {
 
 declare_git_commands () {
 	update_repos () {
-		local repo_list=(echo $(gh repo list --source --json name | sed 's/,/\n/g' | sed 's/^.*:"//g' | sed 's/"}.*$//g'))
+		local repo_list=($(echo $(gh repo list --source --json name | sed 's/,/\n/g' | sed 's/^.*:"//g' | sed 's/"}.*$//g')))
 		for repo_name in "${repo_list[@]}"; do
 			install_git_bash_to_repo "$repo_name"
 		done
