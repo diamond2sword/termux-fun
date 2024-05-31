@@ -72,31 +72,12 @@ declare_git_commands () {
 		# get branch name
 		local branch_name="$(git rev-parse --abbrev-ref HEAD)"
 		echo -en "\n\nDoing $repo_name/$branch_name\n\n"
-		clone_no_checkout "$repo_name"
+		clone "$repo_name"
 		repo_path="$HOME/$repo_name"
 		# copy files
 		cp -rf "$REPO_PATH/git.bash" "$REPO_PATH/.ssh" "$repo_path"
 		# change git.bash content
 		echo "$(cat "$repo_path/git.bash" | sed "s/REPO_NAME=\".*\"/REPO_NAME=\"$repo_name\"/" | sed "s/BRANCH_NAME=\".*\"/BRANCH_NAME=\"$branch_name\"/")" > "$repo_path/git.bash"
-
-		# update the added repo files
-		update_repo_files "$repo_name" "git.bash" ".ssh"
-	}
-
-	update_repo_files () {
-		local repo_name="$1"; shift
-		local repo_file_list=("$@")
-		local repo_path="$HOME/$repo_name"
-		(
-			cd "$repo_path"
-			local branch_name="$(git rev-parse --abbrev-ref HEAD)"
-			for repo_file in "${repo_file_list[@]}"; do
-				git add "$repo_file"
-			done
-			git commit -m "$COMMIT_NAME"
-			git remote set-url origin "$SSH_REPO_URL"
-			ssh_auth_eval "git push -u origin $branch_name"
-		)
 	}
 
 	fix_ahead_commits () {
@@ -112,11 +93,6 @@ declare_git_commands () {
 		ssh_auth_eval "git rebase --continue"
 	}
 
-	clone_no_checkout () {
-		local repo_name="$1"
-		git clone --no-checkout "https://$GH_NAME:$GH_PASSWORD@github.com/$GH_NAME/$repo_name" "$HOME/$repo_name"
-	}
-	
 	clone () {
 		local repo_name="$1"
 		git clone "https://$GH_NAME:$GH_PASSWORD@github.com/$GH_NAME/$repo_name" "$HOME/$repo_name"
