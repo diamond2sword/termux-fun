@@ -140,11 +140,14 @@ main () {
 
 		#study
 		git-bash clone study
+		git-bash clone bash-fun
+		git-bash clone java-fun
 
 		#coding stuffs
 		{
-			# c++
+			# c++, c
 			git-bash clone cpp-fun
+			git-bash clone c-fun
 			apt install clang
 		}
 		{
@@ -155,13 +158,15 @@ main () {
 		{
 			#github
 			pkg install gh
-
-			git-bash clone c-fun
-			git-bash clone bash-fun
-			git-bash clone asm-fun
-			git-bash clone java-fun
-			git-bash clone
-			git-bash clone cpp-fun
+		}
+		{
+			# python
+			git-bash clone python-fun
+			apt install python
+		}
+		{
+			# kotlin
+			git-bash clone kotlin-fun
 		}
 	}
 }
