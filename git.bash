@@ -30,7 +30,6 @@ declare_strings () {
 			exit
 		fi
 		SSH_KEY_PASSPHRASE="$(cat "$ssh_key_passphrase_path")"
-		#"for(;C==0;){std::cout<<C++}"
 	}
 	{
 		gh_pass_path="$HOME/github-personal-token.txt"
