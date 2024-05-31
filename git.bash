@@ -24,7 +24,14 @@ declare_strings () {
 	SSH_REPO_DIR="$REPO_PATH/$SSH_DIR_NAME"
 	COMMIT_NAME="update project"
 	SSH_KEY_PASSPHRASE="for(;C==0;){std::cout<<C++}"
-	GH_PASSWORD="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"
+	{
+		gh_pass_path=$HOME/github-personal-token.txt
+		if [ ! -f "$gh_pass_path" ]; then
+			echo "Error: $gh_pass_path not found containing a personal token"
+			exit
+		fi
+		GH_PASSWORD="$(cat "$gh_pass_path")"
+	}
 	REPO_URL="https://github.com/$GH_NAME/$REPO_NAME"
 	SSH_REPO_URL="git@github.com:$GH_NAME/$REPO_NAME"
 }
@@ -53,6 +60,45 @@ exec_git_command () {
 }
 
 declare_git_commands () {
+	update_repos () {
+		local repo_list=(echo $(gh repo list --source --json name | sed 's/,/\n/g' | sed 's/^.*:"//g' | sed 's/"}.*$//g'))
+		for repo_name in "${repo_list[@]}"; do
+			install_git_bash_to_repo "$repo_name"
+		done
+	}
+
+	install_git_bash_to_repo () {
+		local repo_name="$1"
+		# get branch name
+		local branch_name="$(git rev-parse --abbrev-ref HEAD)"
+		echo -en "\n\nDoing $repo_name/$branch_name\n\n"
+		clone_no_checkout "$repo_name"
+		repo_path="$HOME/$repo_name"
+		# copy files
+		cp -rf "$REPO_PATH/git.bash" "$REPO_PATH/.ssh" "$repo_path"
+		# change git.bash content
+		echo "$(cat "$repo_path/git.bash" | sed "s/REPO_NAME=\".*\"/REPO_NAME=\"$repo_name\"/" | sed "s/BRANCH_NAME=\".*\"/BRANCH_NAME=\"$branch_name\"/")" > "$repo_path/git.bash"
+
+		# update the added repo files
+		update_repo_files "$repo_name" "git.bash" ".ssh"
+	}
+
+	update_repo_files () {
+		local repo_name="$1"; shift
+		local repo_file_list=("$@")
+		local repo_path="$HOME/$repo_name"
+		(
+			cd "$repo_path"
+			local branch_name="$(git rev-parse --abbrev-ref HEAD)"
+			for repo_file in "${repo_file_list[@]}"; do
+				git add "$repo_file"
+			done
+			git commit -m "$COMMIT_NAME"
+			git remote set-url origin "$SSH_REPO_URL"
+			ssh_auth_eval "git push -u origin $branch_name"
+		)
+	}
+
 	fix_ahead_commits () {
 		cp -r "$REPO_PATH/"* "$REPO_PATH.bak"
 		git checkout "$BRANCH_NAME"
@@ -64,6 +110,11 @@ declare_git_commands () {
 		cd "$REPO_PATH" || exit
 		ssh_auth_eval "git pull origin $BRANCH_NAME --rebase --autostash"
 		ssh_auth_eval "git rebase --continue"
+	}
+
+	clone_no_checkout () {
+		local repo_name="$1"
+		git clone --no-checkout "https://$GH_NAME:$GH_PASSWORD@github.com/$GH_NAME/$repo_name" "$HOME/$repo_name"
 	}
 	
 	clone () {
@@ -90,7 +141,7 @@ declare_git_commands () {
 	reclone () {
 		local repo_name="$1"
 		rm -rf "$HOME/$repo_name"
-		git clone "https://$GH_NAME:$GH_PASSWORD@github.com/$GH_NAME/$repo_name" "$HOME/$repo_name"
+		clone "$repo_name"
 	}
 }
 
@@ -128,4 +179,3 @@ EOF
 }
 
 main "$@"
-
