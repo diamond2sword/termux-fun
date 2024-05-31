@@ -152,9 +152,17 @@ main () {
 			git-bash clone asm-fun
 			apt install binutils
 		}
-		git-bash clone c-fun
-		git-bash clone bash-fun
-		git-bash clone cpp-fun
+		{
+			#github
+			pkg install gh
+
+			git-bash clone c-fun
+			git-bash clone bash-fun
+			git-bash clone asm-fun
+			git-bash clone java-fun
+			git-bash clone
+			git-bash clone cpp-fun
+		}
 	}
 }
 
