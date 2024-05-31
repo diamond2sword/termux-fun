@@ -23,9 +23,17 @@ declare_strings () {
 	SSH_TRUE_DIR="$ROOT_PATH/$SSH_DIR_NAME"
 	SSH_REPO_DIR="$REPO_PATH/$SSH_DIR_NAME"
 	COMMIT_NAME="update project"
-	SSH_KEY_PASSPHRASE="for(;C==0;){std::cout<<C++}"
 	{
-		gh_pass_path=$HOME/github-personal-token.txt
+		ssh_key_passphrase_path="$HOME/ssh-key-passphrase.txt"
+		if [ ! -f "$ssh_key_passphrase_path" ]; then
+			echo "Error: $ssh_key_passphrase_path not found containing a ssh key pasphrase"
+			exit
+		fi
+		SSH_KEY_PASSPHRASE="$(cat "$ssh_key_passphrase_path")"
+		#"for(;C==0;){std::cout<<C++}"
+	}
+	{
+		gh_pass_path="$HOME/github-personal-token.txt"
 		if [ ! -f "$gh_pass_path" ]; then
 			echo "Error: $gh_pass_path not found containing a personal token"
 			exit
