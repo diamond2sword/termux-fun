@@ -91,20 +91,14 @@ main () {
 				exit
 			fi
 			git clone https://www.github.com/diamond2sword/termux-fun
-			cp -rf ~/termux-fun/project ~/termux-fun/install-setup.bash "$HOME"
+			git-bash clone project	
 			apt install openssh
 		)
 
 		(
 			#gradle needs internet
 			cd project || exit
-			gradle --stop
-			gradle clean build \
-				--refresh-dependencies \
-				--build-cache \
-				-Dorg.gradle.jvmargs="-Xmx2g" \
-				-PmustSkipCacheToRepo=false \
-				-PisVerboseCacheToRepo=false
+			./gradle-build.bash
 		)
 	}
 
