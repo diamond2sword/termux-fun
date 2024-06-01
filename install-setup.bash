@@ -79,10 +79,6 @@ main () {
 		apt install gradle
   	}
 
-   	mkdir -p ~/.gradle/init.d
-	echo "$OFFLINE_INIT_GRADLE_KTS" > ~/.gradle/init.d/offline.init.gradle.kts
-	echo "$OPTIMIZE_INIT_GRADLE_KTS" > ~/.gradle/init.d/optimize.init.gradle.kts
-
 	{
 		(
 			#git
@@ -162,6 +158,13 @@ main () {
 			# kotlin
 			git-bash clone kotlin-fun
 		}
+	}
+	{
+		# setup github secret
+		echo -en "Github Personal Token:"
+		read -r github_personal_token
+		echo -en "Secret Key Passphrase:"
+		read -r secret_key_passphrase
 	}
 }
 
