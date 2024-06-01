@@ -1,13 +1,5 @@
 #!/bin/bash
 main () {
-	#reset neovim
-	yes | {
-		rm -rf ~/.local/share/nvim
-		rm -rf ~/.config/nvim
-		rm -rf ~/.config/coc
-		apt-get purge neovim
-	}
-
 	yes | {
 		apt update
 		apt upgrade
@@ -153,10 +145,6 @@ main () {
 			# python
 			git-bash clone python-fun
 			apt install python
-		}
-		{
-			# kotlin
-			git-bash clone kotlin-fun
 		}
 	}
 	{
