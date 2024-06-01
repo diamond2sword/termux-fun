@@ -116,10 +116,6 @@ main () {
 	}
 
 	yes | {
-		#misc
-		apt install file shfmt
-		apt install imagemagick pandoc pdf2svg pdftk qpdf
-
 		#study
 		git-bash clone study
 		git-bash clone bash-fun
@@ -145,6 +141,12 @@ main () {
 			# python
 			git-bash clone python-fun
 			apt install python
+		}
+		{
+			# print
+			git-bash clone print-shop
+			apt install file shfmt
+			apt install imagemagick pandoc pdf2svg pdftk qpdf
 		}
 	}
 	{
