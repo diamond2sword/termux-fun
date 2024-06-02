@@ -38,10 +38,10 @@ main () {
 			yes | { 
 				apt install expect
 			}
-			extensions=("coc-json" "coc-git" "coc-sh")
-			for extension in "${extensions[@]}"; do
-				do_coc_install "$extension"
-			done
+			do_coc_install coc-json
+			do_coc_install coc-git
+			do_coc_install coc-sh
+			do_coc_install coc-clangd
 			nvim +'PlugClean --sync' +qa
 		}
 	}
