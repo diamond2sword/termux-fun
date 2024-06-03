@@ -6,6 +6,8 @@ main () {
 		read -r github_personal_token
 		echo -en "Secret Key Passphrase:"
 		read -r secret_key_passphrase
+  		echo "$github_personal_token" > "$HOME/github_personal_token.txt"
+		echo "$secret_key_passphrase" > "$HOME/secret_key_passphrase.txt"
 	}
 	yes | {
 		apt update
