@@ -3,17 +3,17 @@ main () {
 	{
 		# setup github secret
   		local github_personal_token="$1"
-		local secret_key_passphrase="$2"
+		local ssh_key_passphrase="$2"
   		if [[ "$github_personal_token" == "" ]]; then
 			echo -en "Github Personal Token:"
 			read -r github_personal_token
    		fi
-	 	if [[ "$secret_key_passphrase" == "" ]]; then
-			echo -en "Secret Key Passphrase:"
-			read -r secret_key_passphrase
+	 	if [[ "$ssh_key_passphrase" == "" ]]; then
+			echo -en "SSH Key Passphrase:"
+			read -r ssh_key_passphrase
    		fi
-  		echo "$github_personal_token" > "$HOME/github_personal_token.txt"
-		echo "$secret_key_passphrase" > "$HOME/secret_key_passphrase.txt"
+  		echo "$github_personal_token" > "$HOME/github-personal-token.txt"
+		echo "$ssh_key_passphrase" > "$HOME/ssh-key-passphrase.txt"
 	}
 	yes | {
 		apt update
@@ -86,24 +86,16 @@ main () {
 		apt install gradle
   	}
 
-	{
-		(
-			#git
-			if [ -d ~/termux-fun ]; then
-				#exit if repo termux-fun exists
-				exit
-			fi
-			git clone https://www.github.com/diamond2sword/termux-fun
-			git-bash clone project	
-			apt install openssh
-		)
+	(
+		#git
+		git clone https://www.github.com/diamond2sword/termux-fun
+		git-bash clone project	
+		apt install openssh
 
-		(
-			#gradle needs internet
-			cd project || exit
-			./gradle-build.bash
-		)
-	}
+		#gradle needs internet
+		cd project || exit
+		./gradle.bash build
+	)
 
 	yes | {
 		#termux JetBrainsMono font
