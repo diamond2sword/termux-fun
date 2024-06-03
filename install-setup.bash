@@ -2,10 +2,16 @@
 main () {
 	{
 		# setup github secret
-		echo -en "Github Personal Token:"
-		read -r github_personal_token
-		echo -en "Secret Key Passphrase:"
-		read -r secret_key_passphrase
+  		local github_personal_token="$1"
+		local secret_key_passphrase="$2"
+  		if [[ "$github_personal_token" == "" ]]; then
+			echo -en "Github Personal Token:"
+			read -r github_personal_token
+   		fi
+	 	if [[ "$secret_key_passphrase" == "" ]]; then
+			echo -en "Secret Key Passphrase:"
+			read -r secret_key_passphrase
+   		fi
   		echo "$github_personal_token" > "$HOME/github_personal_token.txt"
 		echo "$secret_key_passphrase" > "$HOME/secret_key_passphrase.txt"
 	}
