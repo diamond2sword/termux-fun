@@ -1,5 +1,12 @@
 #!/bin/bash
 main () {
+	{
+		# setup github secret
+		echo -en "Github Personal Token:"
+		read -r github_personal_token
+		echo -en "Secret Key Passphrase:"
+		read -r secret_key_passphrase
+	}
 	yes | {
 		apt update
 		apt upgrade
@@ -148,13 +155,6 @@ main () {
 			apt install file shfmt
 			apt install imagemagick pandoc pdf2svg pdftk qpdf
 		}
-	}
-	{
-		# setup github secret
-		echo -en "Github Personal Token:"
-		read -r github_personal_token
-		echo -en "Secret Key Passphrase:"
-		read -r secret_key_passphrase
 	}
 }
 
