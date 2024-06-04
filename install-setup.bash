@@ -1,4 +1,5 @@
 #!/bin/bash
+
 main () {
 	{
 		# setup github secret
@@ -69,52 +70,67 @@ main () {
 		#kotlin lsp
 		apt install bat
 		apt install unzip
-		if [ -f "$HOME/lsp/kotlin/server/bin/kotlin-language-server" ]; then
-			#escape downloading if kotlin lsp exists
-			exit
-		fi
-		force_move_file_with_cmd f "$HOME/server.zip" "curl -LJO 'https://github.com/fwcd/kotlin-language-server/releases/download/1.3.7/server.zip'"
-		unzip server.zip
-		rm -rf ~/lsp
-		mkdir -p ~/lsp/kotlin
-		cp -rf server ~/lsp/kotlin
-		rm -rf server server.zip
+		force_move_file_with_cmd f "$HOME/lsp/kotlin/server/bin/kotlin-language-server" <(cat << EOF
+			curl -LJ --create-dirs -O --output-dir "$HOME" "https://github.com/fwcd/kotlin-language-server/releases/download/1.3.7/server.zip"
+			unzip "$HOME/server.zip"
+			rm -rf "$HOME/lsp"
+			mkdir -p "$HOME/lsp/kotlin"
+			cp -rf "$HOME/server" "$HOME/lsp/kotlin"
+			rm -rf "$HOME/server" "$HOME/server.zip"
+EOF
+		)
 	)
 	 
 	#gradle
 	yes | {
 		apt install gradle
+		force_move_file_with_cmd f "$HOME/.gradle/wrapper/dists/gradle-8.5-bin.zip" "curl -LJ --create-dirs -O --output-dir '$HOME/.gradle/wrapper/dists' 'https://services.gradle.org/distributions/gradle-8.5-bin.zip'"
   	}
 
 	(
 		#git
-		force_move_file_with_cmd d "$HOME/termux-fun" "git clone 'https://www.github.com/diamond2sword/termux-fun'"
+		force_move_file_with_cmd d "$HOME/termux-fun" "git clone 'https://github.com/dimond2sword/termux-fun' '$HOME/termux-fun'"
 		git_bash_clone project	
 		apt install openssh
 
 		#gradle needs internet
-		cd project || exit
-		./gradle.bash build
+		force_move_file_with_cmd d "$HOME/.gradle/repos/m2" <(cat << EOF
+			cd project || exit
+			./gradle.bash build
+EOF
+		)
 	)
 
 	yes | {
 		#termux JetBrainsMono font
-		force_move_file_with_cmd f "JetBrainsMono-2.304.zip" "curl -LJO 'https://download.jetbrains.com/fonts/JetBrainsMono-2.304.zip'"
-		unzip ~/JetBrainsMono-2.304.zip -d ~/font
-		cp ~/font/fonts/ttf/JetBrainsMono-Regular.ttf ~/.termux/font.ttf
-		rm JetBrainsMono-2.304.zip
-		rm -rf ~/font
-		termux-reload-settings
+		local zip_name="JetBrainsMono-2.304.zip"
+		local font_name="JetBrainsMono-Regular.ttf"
+		local termux_dir="$HOME/.termux"
+
+		force_move_file_with_cmd f "$termux_dir/$font_name" <(cat <<- EOF
+			curl -LJO "https://download.jetbrains.com/fonts/$zip_name"
+			unzip '$HOME/$zip_name' -d "$HOME/font"
+			cp "$HOME/font/fonts/ttf/$font_name" "$termux_dir"
+			cp "$termux_dir/$font_name" "$termux_dir/font.ttf"
+			rm "$HOME/$zip_name"
+			rm -rf "$HOME/font"
+			termux-reload-settings
+EOF
+		)
 	}
 	
 	yes | {
 		#zsh
 		apt install zsh
 
-		force_move_file_with_cmd f "$HOME/install.sh" "curl -LJO 'https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh'"
-		sh -c "$(cat "$HOME/install.sh")"
+		force_move_file_with_cmd d "$HOME/.oh-my-zsh" <(cat << "EOF"
+			curl -LJO 'https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh'"
+			sh -c "$(cat "$HOME/install.sh")"
+			rm -f "$HOME/install.sh"
+EOF
+		)
 		local antidote_path="${ZDOTDIR:-$HOME}/.antidote"
-		force_move_file_with_cmd d "git clone --depth=1 'https://github.com/mattmc3/antidote.git' '$antidote_path'"
+		force_move_file_with_cmd d "$antidote_path" "git clone --depth=1 'https://github.com/mattmc3/antidote.git' '$antidote_path'"
 
 		#because antidote has to install plugins for zsh
 		chsh -s zsh
@@ -171,6 +187,14 @@ force_move_file_with_cmd () {
 	local file_type="$1"
 	local dst_path="$2"
 	local cmd="$3"
+	eval_cmd () {
+		eval "$1"
+	}
+	if (echo "$cmd" | sed -n "/\/proc\/self\/fd\//!q1"); then
+		eval_cmd () {
+			bash "$1"
+		}
+	fi
 	while true; do
 		if [ "$file_type" == "d" ]; then
 			if [ -d "$dst_path" ]; then
@@ -183,7 +207,7 @@ force_move_file_with_cmd () {
 			fi
 		fi
 		echo "force_move_file_with_cmd: executing: $cmd"
-		eval "$cmd"
+		eval_cmd "$cmd"
 	done
 }
 
@@ -232,7 +256,7 @@ expect <<- "EOF"
 		-re "FUZZY" {
 			send "$cocExtensionClue"
 			expect {
-				-re "$cocExtension" {exit 0} 
+				-re "$cocExtension|~\/\.config" {exit 0} 
 				-re "No results" 	{exit 1} 
 				eof
 			}
