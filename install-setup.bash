@@ -54,7 +54,7 @@ main () {
 			yes | { 
 				apt install expect
 			}
-			coc_extension_list=("coc-json" "coc-git" "coc-sh" "coc-clangd")
+			coc_extension_list=(coc-json coc-git coc-sh coc-clangd coc-html coc-css coc-tsserver)
 			for coc_extension in "${coc_extension_list[@]}"; do
 				force_coc_install "$coc_extension"
 			done
