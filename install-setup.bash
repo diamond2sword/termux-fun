@@ -1,9 +1,5 @@
 #!/bin/bash
 
-exec 5> >(logger -t $0)
-BASH_XTRACEFD="5"
-PS4='$LINENO: '
-
 main () {
 	{
 		# setup github secret
@@ -45,7 +41,7 @@ main () {
 	mkdir -p ~/.config/nvim/lua/lsp
 	mkdir -p ~/.config/nvim/after/syntax/sh
 	echo "$INIT_VIM" > ~/.config/nvim/init.vim
-	echo "$VIM_SH_HEREDOC_HIGHLIGHTING" > ~/.config/nvim/after/syntax/sh/heredoc-sh.vim
+	echo -E "$VIM_SH_HEREDOC_HIGHLIGHTING" > ~/.config/nvim/after/syntax/sh/heredoc-sh.vim
 	
 	false && {
 		{
@@ -98,7 +94,7 @@ EOF
 		apt install openssh
 
 		#gradle needs internet
-		force_move_file_with_cmd d "$HOME/.gradle/repos/m2" <(cat << EOF
+		force_move_file_with_cmd d "$HOME/project/.gradle" <(cat << EOF
 			cd "$HOME/project"
 			./gradle.bash build
 EOF
