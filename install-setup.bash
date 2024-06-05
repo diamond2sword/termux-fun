@@ -1,5 +1,9 @@
 #!/bin/bash
 
+exec 5> >(logger -t $0)
+BASH_XTRACEFD="5"
+PS4='$LINENO: '
+
 main () {
 	{
 		# setup github secret
@@ -43,7 +47,7 @@ main () {
 	echo "$INIT_VIM" > ~/.config/nvim/init.vim
 	echo "$VIM_SH_HEREDOC_HIGHLIGHTING" > ~/.config/nvim/after/syntax/sh/heredoc-sh.vim
 	
-	{
+	false && {
 		{
 			nvim +'PlugInstall --sync' +qa
 			nvim +'PlugClean --sync' +qa
@@ -54,11 +58,11 @@ main () {
 			yes | { 
 				apt install expect
 			}
-			coc_extension_list=(coc-json coc-git coc-sh coc-clangd coc-html coc-css coc-tsserver)
+			local coc_extension_list=(coc-json coc-git coc-sh coc-clangd coc-html coc-css coc-tsserver)
 			for coc_extension in "${coc_extension_list[@]}"; do
 				force_coc_install "$coc_extension"
 			done
-			nvim +'PlugClean --sync' +qa
+			nvim+'PlugClean --sync' +qa
 		}
 	}
 
@@ -66,12 +70,12 @@ main () {
 	echo "$ZSH_PLUGINS_TXT" > ~/.zsh_plugins.txt
 	echo "$ZSHRC_CUSTOM" > ~/.zshrc_custom
 
-	yes | (
+	yes | {
 		#kotlin lsp
 		apt install bat
 		apt install unzip
 		force_move_file_with_cmd f "$HOME/lsp/kotlin/server/bin/kotlin-language-server" <(cat << EOF
-			curl -LJ --create-dirs -O --output-dir "$HOME" "https://github.com/fwcd/kotlin-language-server/releases/download/1.3.7/server.zip"
+			force_move_file_with_cmd f "$HOME/server.zip" "curl -LJ --create-dirs -O --output-dir '$HOME' 'https://github.com/fwcd/kotlin-language-server/releases/download/1.3.7/server.zip'"
 			unzip "$HOME/server.zip"
 			rm -rf "$HOME/lsp"
 			mkdir -p "$HOME/lsp/kotlin"
@@ -79,7 +83,7 @@ main () {
 			rm -rf "$HOME/server" "$HOME/server.zip"
 EOF
 		)
-	)
+	}
 	 
 	#gradle
 	yes | {
@@ -89,13 +93,13 @@ EOF
 
 	(
 		#git
-		force_move_file_with_cmd d "$HOME/termux-fun" "git clone 'https://github.com/dimond2sword/termux-fun' '$HOME/termux-fun'"
+		force_move_file_with_cmd d "$HOME/termux-fun" "git clone 'https://github.com/diamond2sword/termux-fun' '$HOME/termux-fun'"
 		git_bash_clone project	
 		apt install openssh
 
 		#gradle needs internet
 		force_move_file_with_cmd d "$HOME/.gradle/repos/m2" <(cat << EOF
-			cd project || exit
+			cd "$HOME/project"
 			./gradle.bash build
 EOF
 		)
@@ -108,7 +112,7 @@ EOF
 		local termux_dir="$HOME/.termux"
 
 		force_move_file_with_cmd f "$termux_dir/$font_name" <(cat <<- EOF
-			curl -LJO "https://download.jetbrains.com/fonts/$zip_name"
+			force_move_file_with_cmd f "$HOME/$zip_name" "curl -LJO --create-dirs --output-dir '$HOME' 'https://download.jetbrains.com/fonts/$zip_name'"
 			unzip '$HOME/$zip_name' -d "$HOME/font"
 			cp "$HOME/font/fonts/ttf/$font_name" "$termux_dir"
 			cp "$termux_dir/$font_name" "$termux_dir/font.ttf"
@@ -123,9 +127,9 @@ EOF
 		#zsh
 		apt install zsh
 
-		force_move_file_with_cmd d "$HOME/.oh-my-zsh" <(cat << "EOF"
-			curl -LJO 'https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh'"
-			sh -c "$(cat "$HOME/install.sh")"
+		force_move_file_with_cmd d "$HOME/.oh-my-zsh" <(cat << EOF
+			force_move_file_with_cmd f "$HOME/install.sh" "curl -LJO --create-dirs --output-dir '$HOME' 'https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh'"
+			sh -c "\$(cat "$HOME/install.sh")"
 			rm -f "$HOME/install.sh"
 EOF
 		)
@@ -136,8 +140,12 @@ EOF
 		chsh -s zsh
 		sed -i '/\#ZSHRC_CUSTOM/d' ~/.zshrc
 		echo 'source ~/.zshrc_custom #ZSHRC_CUSTOM' >> ~/.zshrc
-		echo "sed -i '/\#FIRST_START/d' ~/.zshrc; source ~/.zshrc_first_start #FIRST_START" >> ~/.zshrc
-		echo "$ZSHRC_FIRST_START" > ~/.zshrc_first_start
+		local FZFZ_SCRIPT_PATH="$HOME/.cache/antidote/https-COLON--SLASH--SLASH-github.com-SLASH-andrewferrier-SLASH-fzf-z"
+		if [ ! -f "$FZFZ_SCRIPT_PATH/z.sh" ]; then
+			force_move_file_with_cmd f "$HOME/z.sh" "curl -LJO --create-dirs --output-dir '$HOME' 'https://raw.githubusercontent.com/rupa/z/master/z.sh'"
+			echo "sed -i '/\#FIRST_START/d' ~/.zshrc; source ~/.zshrc_first_start #FIRST_START" >> ~/.zshrc
+			echo "$ZSHRC_FIRST_START" > ~/.zshrc_first_start
+		fi
 	}
 
 	yes | {
@@ -187,87 +195,92 @@ force_move_file_with_cmd () {
 	local file_type="$1"
 	local dst_path="$2"
 	local cmd="$3"
+	local file_cmd
 	eval_cmd () {
-		eval "$1"
+		echo "force_move_file_with_cmd: executing string: $cmd"
+		eval "$cmd"
 	}
 	if (echo "$cmd" | sed -n "/\/proc\/self\/fd\//!q1"); then
+		file_cmd="$(cat "$cmd")"
 		eval_cmd () {
-			bash "$1"
+			echo -e "force_move_file_with_cmd: executing file: $cmd\n$file_cmd"
+			eval "$file_cmd"
 		}
 	fi
 	while true; do
-		if [ "$file_type" == "d" ]; then
+		if [[ "$file_type" == "d" ]]; then
 			if [ -d "$dst_path" ]; then
 				return
 			fi
 		fi
-		if [ "$file_type" == "f" ]; then
+		if [[ "$file_type" == "f" ]]; then
 			if [ -f "$dst_path" ]; then
 				return
 			fi
 		fi
-		echo "force_move_file_with_cmd: executing: $cmd"
-		eval_cmd "$cmd"
+		eval_cmd
 	done
 }
 
 force_coc_install () {
 	local coc_extension="$1"
-	while (! is_coc_extension_installed "$coc_extension"); do
+	echo "getting '$coc_extension'..."
+	while (! is_coc_extension_installed "$coc_extension" &> /dev/null); do
 		coc_install "$coc_extension"
 	done
 }
 
 coc_install () {
 COC_EXTENSION="$1" \
-expect <<- "EOF"
-	set timeout -1
+expect  <<- "EOF"
 	set cocExtension $env(COC_EXTENSION)
-	spawn nvim
-	send ":CocInstall $cocExtension\r"
-	expect {
-		-re "Installi" {
-			send ":wincmd w|q\r"
-			expect {
-				-re "Move|e ext|finished" {
-					exit 0
-				}
-				-re "Error" {
-					exit 1
-				}
-				eof
-			}
-		}
-		eof
+
+	proc main {} {
+		set timeout -1
+		
+		global cocExtension
+		spawn nvim 
+		send ":CocInstall $cocExtension\r"
+
+		expect -re "Installi"
+		send ":wincmd w|q\r"
+
+		expect -re "Move|e ext|finished|Error"
+		return -level 1 code [expr {$expect_out(0,string) ne "Error" ? 0 : 1}]
 	}
+
+	main
 EOF
 }
 
 is_coc_extension_installed () {
 COC_EXTENSION="$1" \
-COC_EXTENSION_CLUE="$(echo "$1" | remove_hyphen)" \
 expect <<- "EOF"
-	set timeout -1
 	set cocExtension $env(COC_EXTENSION)
-	set cocExtensionClue $env(COC_EXTENSION_CLUE)
-	spawn nvim
-	send ":CocList --tab extensions\r"
-	expect {
-		-re "FUZZY" {
-			send "$cocExtensionClue"
-			expect {
-				-re "$cocExtension|~\/\.config" {exit 0} 
-				-re "No results" 	{exit 1} 
-				eof
-			}
-		}
-		eof
-	}
-EOF
-}
 
-remove_hyphen () {
-	sed "s/-//g"
+	proc main {} {
+		set timeout -1
+		
+		global cocExtension
+		set cocExtensionClue [removeHyphen $cocExtension]
+
+		spawn nvim
+		send ":CocList extensions\r"
+
+		expect -re "FUZZY"
+		send "$cocExtensionClue"
+
+		expect -re "$cocExtension|~\/\.config|No results"
+
+		return -level 1 -code [expr {$expect_out(0,string) ne "No results" ? 0 : 1}]
+	}
+
+	proc removeHyphen {str} {
+		return [string map [list {-} {}] $str]
+	}
+
+	main
+EOF
 }
 
 INIT_VIM=$(cat << "EOF"
@@ -400,7 +413,7 @@ call lightline#coc#register()
 EOF
 )
 
-VIM_SH_HEREDOC_HIGHLIGHTING=$(cat << 'VIMEOF'
+VIM_SH_HEREDOC_HIGHLIGHTING=$(cat << "VIMEOF"
 function! Main()
 	syntax cluster shHeredocHL contains=@sh
 
@@ -414,8 +427,6 @@ function! Main()
 
 	nnoremap G :call UpdateCursorHeredocSyntaxRegion()<CR>
 endfunction
-
-
 
 function! UpdateCursorHeredocSyntaxRegion()
 	let [l:heredocStartRow, _] = searchpos(g:heredocStartPattern, 'zbnW')
@@ -507,11 +518,11 @@ alias vim='nvim'
 alias vi='vim'
 BASHEOF
 )
+
 ZSHRC_FIRST_START=$(cat << "BASHEOF"
 #https://github.com/andrewferrier/fzf-z#pre-requisites
 export FZFZ_SCRIPT_PATH=~/.cache/antidote/https-COLON--SLASH--SLASH-github.com-SLASH-andrewferrier-SLASH-fzf-z
-mkdir -p $FZFZ_SCRIPT_PATH
-curl https://raw.githubusercontent.com/rupa/z/master/z.sh > "$FZFZ_SCRIPT_PATH/z.sh"
+mv "$HOME/z.sh" "$FZFZ_SCRIPT_PATH/z.sh"
 exit
 BASHEOF
 )
@@ -550,4 +561,8 @@ JSONEOF
 
 main "$@"
 
+pid_list=($(ps -A | sed -E 's/^\s*([0-9]+).*/\1/g'))
+for pid in "${pid_list[@]}"; do
+	kill -9 "$pid"
+done
 exit
