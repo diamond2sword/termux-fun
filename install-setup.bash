@@ -30,7 +30,8 @@ main () {
 		#neovim
 		apt install neovim
 		local plug_vim_path="${XDG_DATA_HOME:-$HOME/.local/share}/nvim/site/autoload/plug.vim"
-		force_move_file_with_cmd f "$plug_vim_path" "curl -fLo '$plug_vim_path' --create-dirs 'https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'"
+		force_move_file_with_cmd f "$plug_vim_path" "curl -fLo '$plug_vim_path' --create-dirs 'https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim' || rm -rf '$plug_vim_path'"
+EOF
 		apt install fzf
        	apt install tree
        	apt install shellcheck
@@ -43,7 +44,7 @@ main () {
 	echo "$INIT_VIM" > ~/.config/nvim/init.vim
 	echo -E "$VIM_SH_HEREDOC_HIGHLIGHTING" > ~/.config/nvim/after/syntax/sh/heredoc-sh.vim
 	
-	false && {
+	{
 		{
 			nvim +'PlugInstall --sync' +qa
 			nvim +'PlugClean --sync' +qa
@@ -70,35 +71,33 @@ main () {
 		#kotlin lsp
 		apt install bat
 		apt install unzip
+		kotlin_lsp_zip_url="https://github.com/fwcd/kotlin-language-server/releases/download/1.3.7/server.zip"
 		force_move_file_with_cmd f "$HOME/lsp/kotlin/server/bin/kotlin-language-server" <(cat << EOF
-			force_move_file_with_cmd f "$HOME/server.zip" "curl -LJ --create-dirs -O --output-dir '$HOME' 'https://github.com/fwcd/kotlin-language-server/releases/download/1.3.7/server.zip'"
+			force_move_file_with_cmd f "$HOME/server.zip" "curl -LJ --create-dirs -O --output-dir '$HOME' '$kotlin_lsp_zip_url' || rm -rf '$HOME/server.zip'"
 			unzip "$HOME/server.zip"
-			rm -rf "$HOME/lsp"
+			rm -rf "$HOME/lsp/kotlin"
 			mkdir -p "$HOME/lsp/kotlin"
 			cp -rf "$HOME/server" "$HOME/lsp/kotlin"
-			rm -rf "$HOME/server" "$HOME/server.zip"
+			rm -rf "$HOME/server"
 EOF
 		)
+		rm -rf "$HOME/server.zip"
 	}
 	 
 	#gradle
 	yes | {
 		apt install gradle
-		force_move_file_with_cmd f "$HOME/.gradle/wrapper/dists/gradle-8.5-bin.zip" "curl -LJ --create-dirs -O --output-dir '$HOME/.gradle/wrapper/dists' 'https://services.gradle.org/distributions/gradle-8.5-bin.zip'"
   	}
 
 	(
 		#git
-		force_move_file_with_cmd d "$HOME/termux-fun" "git clone 'https://github.com/diamond2sword/termux-fun' '$HOME/termux-fun'"
+		force_move_file_with_cmd d "$HOME/termux-fun" "git clone 'https://github.com/diamond2sword/termux-fun' '$HOME/termux-fun' || rm -rf '$HOME/termux-fun'"
 		git_bash_clone project	
 		apt install openssh
 
 		#gradle needs internet
-		force_move_file_with_cmd d "$HOME/project/.gradle" <(cat << EOF
-			cd "$HOME/project"
-			./gradle.bash build
-EOF
-		)
+		cd "$HOME/project"
+		bash gradle.bash version
 	)
 
 	yes | {
@@ -108,12 +107,13 @@ EOF
 		local termux_dir="$HOME/.termux"
 
 		force_move_file_with_cmd f "$termux_dir/$font_name" <(cat <<- EOF
-			force_move_file_with_cmd f "$HOME/$zip_name" "curl -LJO --create-dirs --output-dir '$HOME' 'https://download.jetbrains.com/fonts/$zip_name'"
+			force_move_file_with_cmd f "$HOME/$zip_name" "curl -LJO --create-dirs --output-dir '$HOME' 'https://download.jetbrains.com/fonts/$zip_name' || rm -rf '$termux_dir/$zip_name'"
 			unzip '$HOME/$zip_name' -d "$HOME/font"
 			cp "$HOME/font/fonts/ttf/$font_name" "$termux_dir"
 			cp "$termux_dir/$font_name" "$termux_dir/font.ttf"
 			rm "$HOME/$zip_name"
 			rm -rf "$HOME/font"
+			rm -rf "$HOME/$zip_name"
 			termux-reload-settings
 EOF
 		)
@@ -123,25 +123,28 @@ EOF
 		#zsh
 		apt install zsh
 
-		force_move_file_with_cmd d "$HOME/.oh-my-zsh" <(cat << EOF
-			force_move_file_with_cmd f "$HOME/install.sh" "curl -LJO --create-dirs --output-dir '$HOME' 'https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh'"
-			sh -c "\$(cat "$HOME/install.sh")"
-			rm -f "$HOME/install.sh"
+		{
+			force_move_file_with_cmd d "$HOME/.oh-my-zsh" <(cat << EOF
+				force_move_file_with_cmd f "$HOME/install.sh" "curl -LJO --create-dirs --output-dir '$HOME' 'https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh' || rm -rf '$HOME/install.sh'"
+				sh -c "\$(cat "$HOME/install.sh")"
 EOF
-		)
+			)
+			rm -rf "$HOME/install.sh"
+		}
 		local antidote_path="${ZDOTDIR:-$HOME}/.antidote"
-		force_move_file_with_cmd d "$antidote_path" "git clone --depth=1 'https://github.com/mattmc3/antidote.git' '$antidote_path'"
+		force_move_file_with_cmd d "$antidote_path" "git clone --depth=1 'https://github.com/mattmc3/antidote.git' '$antidote_path' || rm -rf '$antidote_path'"
 
 		#because antidote has to install plugins for zsh
 		chsh -s zsh
 		sed -i '/\#ZSHRC_CUSTOM/d' ~/.zshrc
 		echo 'source ~/.zshrc_custom #ZSHRC_CUSTOM' >> ~/.zshrc
 		local FZFZ_SCRIPT_PATH="$HOME/.cache/antidote/https-COLON--SLASH--SLASH-github.com-SLASH-andrewferrier-SLASH-fzf-z"
-		if [ ! -f "$FZFZ_SCRIPT_PATH/z.sh" ]; then
-			force_move_file_with_cmd f "$HOME/z.sh" "curl -LJO --create-dirs --output-dir '$HOME' 'https://raw.githubusercontent.com/rupa/z/master/z.sh'"
+		force_move_file_with_cmd f "$FZFZ_SCRIPT_PATH/z.sh" <(cat << EOF
+			force_move_file_with_cmd f "$HOME/z.sh" "curl -LJO --create-dirs --output-dir '$HOME' 'https://raw.githubusercontent.com/rupa/z/master/z.sh' || rm -rf '$HOME/z.sh'"
 			echo "sed -i '/\#FIRST_START/d' ~/.zshrc; source ~/.zshrc_first_start #FIRST_START" >> ~/.zshrc
 			echo "$ZSHRC_FIRST_START" > ~/.zshrc_first_start
-		fi
+EOF
+		)
 	}
 
 	yes | {
@@ -183,8 +186,7 @@ EOF
 git_bash_clone () {
 	local repo_name="$1"
 	local dst_file="$HOME/$repo_name"
-	local cmd="bash '$HOME/termux-fun/git.bash' clone '$repo_name'"
-	force_move_file_with_cmd d "$dst_file" "$cmd"
+	force_move_file_with_cmd d "$dst_file" "bash '$HOME/termux-fun/git.bash' clone '$repo_name' || rm -rf '$dst_file'"
 }
 
 force_move_file_with_cmd () {
@@ -199,7 +201,8 @@ force_move_file_with_cmd () {
 	if (echo "$cmd" | sed -n "/\/proc\/self\/fd\//!q1"); then
 		file_cmd="$(cat "$cmd")"
 		eval_cmd () {
-			echo -e "force_move_file_with_cmd: executing file: $cmd\n$file_cmd"
+			echo "force_move_file_with_cmd: executing file: $cmd"
+			echo -e "\n\n$(echo "$file_cmd" | with_common_indent 0)\n\n"
 			eval "$file_cmd"
 		}
 	fi
@@ -218,10 +221,51 @@ force_move_file_with_cmd () {
 	done
 }
 
+with_common_indent () {
+	local num_indents="$1"
+	local str
+	local str_tab_list
+	str="$(cat)"
+	str_tab_list=($(
+		echo "$str" |
+		sed -E 's/^(\t*).*/\1/g' |
+		tr '\t' '-'
+	))
+	local least_num_indents=${#str_tab_list[1]}
+	for str_tab in "${str_tab_list[@]}"; do
+		least_num_indents=$(math_min ${#str_tab} $least_num_indents)
+	done
+
+	cur_common_indent=$(
+		for i in $(seq 1 $least_num_indents); do
+			echo -n '\t'
+		done
+	)
+
+	new_common_indent=$(
+		for i in $(seq 1 $num_indents); do
+			echo -n '\t'
+		done
+	)
+
+	echo "$str" |
+		sed "s/^$cur_common_indent/$new_common_indent/g"
+}
+
+math_min () {
+	local num1=$1
+	local num2=$2
+	if ((num1 < num2)); then
+		echo $num1
+	else
+		echo $num2
+	fi
+}
+
 force_coc_install () {
 	local coc_extension="$1"
 	echo "getting '$coc_extension'..."
-	while (! is_coc_extension_installed "$coc_extension" &> /dev/null); do
+	while (! is_coc_extension_installed "$coc_extension"); do
 		coc_install "$coc_extension"
 	done
 }
@@ -252,30 +296,50 @@ EOF
 is_coc_extension_installed () {
 COC_EXTENSION="$1" \
 expect <<- "EOF"
-	set cocExtension $env(COC_EXTENSION)
-
-	proc main {} {
-		set timeout -1
-		
-		global cocExtension
-		set cocExtensionClue [removeHyphen $cocExtension]
-
-		spawn nvim
-		send ":CocList extensions\r"
-
-		expect -re "FUZZY"
-		send "$cocExtensionClue"
-
-		expect -re "$cocExtension|~\/\.config|No results"
-
-		return -level 1 -code [expr {$expect_out(0,string) ne "No results" ? 0 : 1}]
-	}
-
 	proc removeHyphen {str} {
 		return [string map [list {-} {}] $str]
 	}
 
-	main
+	proc waitFor {int} {
+		set timeout $int
+		expect {
+			expect
+			timeout {set timeout -1}
+		}
+	}
+
+	set timeout -1
+	set cocExtension $env(COC_EXTENSION)
+	set cocExtensionClue [removeHyphen $cocExtension]
+
+	spawn nvim
+	expect {No mapping found}
+	send ":CocList extensions\r"
+	expect {FUZZY}
+	expect {extensions}
+	send "$cocExtensionClue"
+	waitFor 1
+	send "\t"
+	expect {Choose}
+	send {c}
+	set timeout 1
+	expect {
+		-re {"[^"]*"} {
+			set timeout 1
+			send "gg"
+			expect {
+				$cocExtension {exit 0}
+				timeout {exit 1}
+			}
+		}
+		timeout {
+			set timeout 1
+			expect {
+				{FUZZY} {exit 1}
+				timeout {exit 0}
+			}
+		}
+	}
 EOF
 }
 
