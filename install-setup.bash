@@ -71,17 +71,17 @@ EOF
 		#kotlin lsp
 		apt install bat
 		apt install unzip
-		kotlin_lsp_zip_url="https://github.com/fwcd/kotlin-language-server/releases/download/1.3.7/server.zip"
-		force_move_file_with_cmd f "$HOME/lsp/kotlin/server/bin/kotlin-language-server" <(cat << EOF
-			force_move_file_with_cmd f "$HOME/server.zip" "curl -LJ --create-dirs -O --output-dir '$HOME' '$kotlin_lsp_zip_url' || rm -rf '$HOME/server.zip'"
-			unzip "$HOME/server.zip"
-			rm -rf "$HOME/lsp/kotlin"
-			mkdir -p "$HOME/lsp/kotlin"
-			cp -rf "$HOME/server" "$HOME/lsp/kotlin"
-			rm -rf "$HOME/server"
-EOF
-		)
-		rm -rf "$HOME/server.zip"
+#		kotlin_lsp_zip_url="https://github.com/fwcd/kotlin-language-server/releases/download/1.3.7/server.zip"
+#		force_move_file_with_cmd f "$HOME/lsp/kotlin/server/bin/kotlin-language-server" <(cat << EOF
+#			force_move_file_with_cmd f "$HOME/server.zip" "curl -LJ --create-dirs -O --output-dir '$HOME' '$kotlin_lsp_zip_url' || rm -rf '$HOME/server.zip'"
+#			unzip "$HOME/server.zip"
+#			rm -rf "$HOME/lsp/kotlin"
+#			mkdir -p "$HOME/lsp/kotlin"
+#			cp -rf "$HOME/server" "$HOME/lsp/kotlin"
+#			rm -rf "$HOME/server"
+#EOF
+#		)
+#		rm -rf "$HOME/server.zip"
 	}
 	 
 	#gradle
@@ -111,7 +111,6 @@ EOF
 			unzip '$HOME/$zip_name' -d "$HOME/font"
 			cp "$HOME/font/fonts/ttf/$font_name" "$termux_dir"
 			cp "$termux_dir/$font_name" "$termux_dir/font.ttf"
-			rm "$HOME/$zip_name"
 			rm -rf "$HOME/font"
 			rm -rf "$HOME/$zip_name"
 			termux-reload-settings
@@ -550,7 +549,7 @@ VIMEOF
 )
 
 
-ZSHRC_CUSTOM=$(cat << "BASHEOF"
+ZSHRC_CUSTOM=$(cat << "EOF"
 #https://getantidote.github.io/install
 zsh_plugins=${ZDOTDIR:-~}/.zsh_plugins.zsh
 [[ -f ${zsh_plugins:r}.txt ]] || touch ${zsh_plugins:r}.txt
@@ -576,15 +575,15 @@ export FZF_BIN_PATH="fzf --bind='ctrl-z:abort'"
 #neovim alias
 alias vim='nvim'
 alias vi='vim'
-BASHEOF
+EOF
 )
 
-ZSHRC_FIRST_START=$(cat << "BASHEOF"
+ZSHRC_FIRST_START=$(cat << "EOF"
 #https://github.com/andrewferrier/fzf-z#pre-requisites
 export FZFZ_SCRIPT_PATH=~/.cache/antidote/https-COLON--SLASH--SLASH-github.com-SLASH-andrewferrier-SLASH-fzf-z
 mv "$HOME/z.sh" "$FZFZ_SCRIPT_PATH/z.sh"
 exit
-BASHEOF
+EOF
 )
 
 ZSH_PLUGINS_TXT=$(cat << "EOF"
@@ -600,7 +599,7 @@ andrewferrier/fzf-z
 EOF
 )
 
-COC_CONFIG=$(cat << "JSONEOF"
+COC_CONFIG=$(cat << "EOF"
 {
 	"coc.preferences.jvmHeapSize": 2048,
 	"languageserveir": {
@@ -616,7 +615,7 @@ COC_CONFIG=$(cat << "JSONEOF"
 		}
 	}
 }
-JSONEOF
+EOF
 )
 
 main "$@"
