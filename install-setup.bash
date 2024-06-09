@@ -469,10 +469,31 @@ let g:lightline = {
 " register compoments:
 call lightline#coc#register()
 
+
+" copy paste
+nnoremap <c-c> :call SetClipboardText()<CR>
+nnoremap <c-v> :call GetClipboardText()<CR>
+
+function! SetClipboardText()
+	let l:yankedText = @"
+	call system("(termux-clipboard-set <(cat \"EOF\"\n" . l:yankedText . "\nEOF\n); termux-toast \"Copied Yanked Text To Clipboard\") &> /dev/null &")
+endfunction
+
+function! GetClipboardText()
+	let l:clipboardText = system("termux-clipboard-get; termux-toast \"Copied Clipboard Text To Yanked Register\"")
+	let @" = l:clipboardText
+endfunction
+
+
+# fix wordwrap
+
+
+# save vim or git keybind
+
 EOF
 )
 
-VIM_SH_HEREDOC_HIGHLIGHTING=$(cat << "VIMEOF"
+VIM_SH_HEREDOC_HIGHLIGHTING=$(cat << "EOF"
 function! Main()
 	syntax cluster shHeredocHL contains=@sh
 
@@ -545,7 +566,7 @@ function! DefineHeredocSyntaxRegionFor(filetype)
 endfunction
 
 call Main()
-VIMEOF
+EOF
 )
 
 
@@ -599,24 +620,21 @@ andrewferrier/fzf-z
 EOF
 )
 
-COC_CONFIG=$(cat << "EOF"
-{
-	"coc.preferences.jvmHeapSize": 2048,
-	"languageserveir": {
-		"kotlin": {
-		    "command": "~/lsp/kotlin/server/bin/kotlin-language-server",
-			"args": ["-Xmx2g", "-J-Xmx2g"],
-	    	"filetypes": ["kotlin"],
-			"javaHome": "$JAVA_HOME",
-      		"javaServerOptions": ["-Xmx2g"],
-			"initializationOptions": {
-		      	"storagePath": "~/lsp/kotlin/caches"
-		   	}
-		}
-	}
-}
-EOF
-)
+#COC_CONFIG=$(cat << "EOF"
+#{
+#	"languageserver": {
+#		"kotlin": {
+#		    "command": "~/lsp/kotlin/server/bin/kotlin-language-server",
+#			"args": ["-Xmx2g", "-J-Xmx2g"],
+#	    	"filetypes": ["kotlin"],
+#			"initializationOptions": {
+#		      	"storagePath": "~/lsp/kotlin/caches"
+#		   	}
+#		}
+#	}
+#}
+#EOF
+#)
 
 main "$@"
 
