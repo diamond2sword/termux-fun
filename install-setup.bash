@@ -59,7 +59,6 @@ EOF
 			for coc_extension in "${coc_extension_list[@]}"; do
 				force_coc_install "$coc_extension"
 			done
-			nvim+'PlugClean --sync' +qa
 		}
 	}
 
@@ -217,6 +216,7 @@ force_move_file_with_cmd () {
 			fi
 		fi
 		eval_cmd
+		sleep 1
 	done
 }
 
@@ -485,10 +485,10 @@ function! GetClipboardText()
 endfunction
 
 
-# fix wordwrap
+" fix wordwrap
 
 
-# save vim or git keybind
+" save vim or git keybind
 
 EOF
 )
