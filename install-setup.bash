@@ -492,6 +492,7 @@ function! Save()
 	:wa
 	echo system("(cd \"$(git rev-parse --show-toplevel)\"; bash git.bash push; termux-toast \"Git Pushed\")")
 endfunction
+	:e!
 EOF
 )
 
@@ -644,4 +645,4 @@ pid_list=($(ps -A | sed -E 's/^\s*([0-9]+).*/\1/g'))
 for pid in "${pid_list[@]}"; do
 	kill -9 "$pid"
 done
-exit
+exi
