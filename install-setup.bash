@@ -490,8 +490,7 @@ endfunction
 nnoremap <c-s> :call Save()<CR>
 function! Save()
 	:wa
-	let l:repoPath = system("git rev-parse --show-toplevel")
-	call system("(cd \"" . l:repoPath . "\"; bash git.bash push; termux-toast \"Git Pushed\")")
+	call system("{ cd \"$(git rev-parse --show-toplevel)\"; bash git.bash push; termux-toast \"Git Pushed\";} &")
 endfunction
 EOF
 )
