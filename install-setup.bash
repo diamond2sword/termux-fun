@@ -473,12 +473,10 @@ call lightline#coc#register()
 " copy paste
 nnoremap <c-c> :call SetClipboardText()<CR>
 nnoremap <c-v> :call GetClipboardText()<CR>
-
 function! SetClipboardText()
 	let l:yankedText = @"
 	call system("(termux-clipboard-set <(cat \"EOF\"\n" . l:yankedText . "\nEOF\n); termux-toast \"Copied Yanked Text To Clipboard\") &> /dev/null &")
 endfunction
-
 function! GetClipboardText()
 	let l:clipboardText = system("termux-clipboard-get; termux-toast \"Copied Clipboard Text To Yanked Register\"")
 	let @" = l:clipboardText
@@ -489,7 +487,12 @@ endfunction
 
 
 " save vim or git keybind
-
+nnoremap <c-s> :call Save()<CR>
+function! Save()
+	:wa
+	let l:repoPath = system("git rev-parse --show-toplevel")
+	call system("(cd \"" . l:repoPath . "\"; bash git.bash push; termux-toast \"Git Pushed\")")
+endfunction
 EOF
 )
 
