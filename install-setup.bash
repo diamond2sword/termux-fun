@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 main () {
 	{
 		# setup github secret
