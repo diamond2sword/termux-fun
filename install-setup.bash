@@ -1,4 +1,4 @@
-!/bin/bash
+#!/bin/bash
 
 main () {
 	{
@@ -55,7 +55,7 @@ EOF
 			yes | { 
 				apt install expect
 			}
-			local coc_extension_list=(coc-json coc-git coc-sh coc-clangd coc-html coc-css coc-tsserver)
+			local coc_extension_list=(coc-json coc-git coc-sh coc-clangd coc-html coc-css coc-tsserver coc-python coc-cmake)
 			for coc_extension in "${coc_extension_list[@]}"; do
 				force_coc_install "$coc_extension"
 			done
@@ -157,6 +157,7 @@ EOF
 			git_bash_clone cpp-fun
 			git_bash_clone c-fun
 			apt install clang
+			pkg install cmake
 		}
 		{
 			# assembly
@@ -171,6 +172,8 @@ EOF
 			# python
 			git_bash_clone python-fun
 			apt install python
+			python -m pip install jedi
+			pip install mypy
 		}
 		{
 			# print
@@ -317,7 +320,7 @@ expect <<- "EOF"
 	expect {FUZZY}
 	expect {extensions}
 	send "$cocExtensionClue"
-	waitFor 1
+	waitFor 2
 	send "\t"
 	expect {Choose}
 	send {c}
@@ -484,7 +487,11 @@ endfunction
 
 
 " fix wordwrap
-
+set breakindent
+set breakindentopt=shift:0
+set showbreak====\ 
+set wrap
+set linebreak
 
 " save vim or git keybind
 nnoremap <c-s> :call Save()<CR>
