@@ -2,6 +2,30 @@
 
 main () {
 	{
+		#configure termux
+		local termux_properties_path="$HOME/.termux/termux.properties"
+		local termux_properties
+		termux_properties=$(cat "$termux_properties_path")
+		new_termux_properties="$({
+			local is_custom=1
+			echo "$termux_properties" | while read -r line; do
+				if [[ "$line" =~ \#CUSTOM_PROPERTIES ]]; then
+					is_custom=$((1 - is_custom))
+					continue
+				fi
+				(exit "$is_custom") && {
+					continue
+				}
+				echo "$line"
+			done
+			echo "#CUSTOM_PROPERTIES"
+			echo "$TERMUX_PROPERTIES"
+			echo "#CUSTOM_PROPERTIES"
+		})"
+
+		echo "$new_termux_properties" > "$termux_properties_path"
+	}
+	{
 		# setup github secret
   		local github_personal_token="$1"
 		local ssh_key_passphrase="$2"
@@ -67,20 +91,8 @@ EOF
 	echo "$ZSHRC_CUSTOM" > ~/.zshrc_custom
 
 	yes | {
-		#kotlin lsp
+		#bat
 		apt install bat
-		apt install unzip
-#		kotlin_lsp_zip_url="https://github.com/fwcd/kotlin-language-server/releases/download/1.3.7/server.zip"
-#		force_move_file_with_cmd f "$HOME/lsp/kotlin/server/bin/kotlin-language-server" <(cat << EOF
-#			force_move_file_with_cmd f "$HOME/server.zip" "curl -LJ --create-dirs -O --output-dir '$HOME' '$kotlin_lsp_zip_url' || rm -rf '$HOME/server.zip'"
-#			unzip "$HOME/server.zip"
-#			rm -rf "$HOME/lsp/kotlin"
-#			mkdir -p "$HOME/lsp/kotlin"
-#			cp -rf "$HOME/server" "$HOME/lsp/kotlin"
-#			rm -rf "$HOME/server"
-#EOF
-#		)
-#		rm -rf "$HOME/server.zip"
 	}
 	 
 	#gradle
@@ -158,6 +170,11 @@ EOF
 			git_bash_clone c-fun
 			apt install clang
 			pkg install cmake
+		}
+		{
+			# markdown
+			pkg install glow
+			npm i -g markserv
 		}
 		{
 			# assembly
@@ -440,14 +457,14 @@ vim.api.nvim_create_autocmd("User", {
     desc = "Update signature help on jump placeholder"
 })
 local opts = {silent = true, nowait = true, expr = true}
-keyset("n", "<C-b>", 'coc#float#has_scroll() ? coc#float#scroll(1) : "<C-b>"', opts)
-keyset("n", "<C-v>", 'coc#float#has_scroll() ? coc#float#scroll(0) : "<C-v>"', opts)
-keyset("i", "<C-b>",
+keyset("n", "<PageDown>", 'coc#float#has_scroll() ? coc#float#scroll(1) : "<PageDown>"', opts)
+keyset("n", "<PageUp>", 'coc#float#has_scroll() ? coc#float#scroll(0) : "<PageUp>"', opts)
+keyset("i", "<PageDown>",
        'coc#float#has_scroll() ? "<c-r>=coc#float#scroll(1)<cr>" : "<Right>"', opts)
-keyset("i", "<C-v>",
+keyset("i", "<PageUp>",
        'coc#float#has_scroll() ? "<c-r>=coc#float#scroll(0)<cr>" : "<Left>"', opts)
-keyset("v", "<C-b>", 'coc#float#has_scroll() ? coc#float#scroll(1) : "<C-b>"', opts)
-keyset("v", "<C-v>", 'coc#float#has_scroll() ? coc#float#scroll(0) : "<C-v>"', opts)
+keyset("v", "<PageDown>", 'coc#float#has_scroll() ? coc#float#scroll(1) : "<PageDown>"', opts)
+keyset("v", "<PageUp>", 'coc#float#has_scroll() ? coc#float#scroll(0) : "<PageUp>"', opts)
 vim.api.nvim_create_user_command("Format", "call CocAction('format')", {})
 vim.api.nvim_create_user_command("Fold", "call CocAction('fold', <f-args>)", {nargs = '?'})
 vim.api.nvim_create_user_command("OR", "call CocActionAsync('runCommand', 'editor.action.organizeImport')", {})
@@ -492,6 +509,7 @@ set breakindentopt=shift:0
 set showbreak====\ 
 set wrap
 set linebreak
+
 
 " save vim or git keybind
 nnoremap <c-s> :call Save()<CR>
@@ -599,13 +617,31 @@ zstyle ':completion:*' menu select
 export BAT_THEME=gruvbox-dark
 
 #https://github.com/andrewferrier/fzf-z#customizing-and-options
-export FZFZ_EXTRA_OPTS=" --border=sharp --preview-window=border-sharp --bind='ctrl-b:preview-down,ctrl-v:preview-up'"
+export FZFZ_EXTRA_OPTS=" --border=sharp --preview-window=border-sharp --bind='pgdn:preview-down,pgup:preview-up'"
 export FZFZ_SUBDIR_LIMIT=0
 export FZF_BIN_PATH="fzf --bind='ctrl-z:abort'"
 
 #neovim alias
 alias vim='nvim'
 alias vi='vim'
+
+#git commands
+root_git_bash_push () {
+	root_git_bash push
+	return
+}
+root_git_bash () {
+	if git rev-parse --show-toplevel &> /dev/null; then
+		"$(git rev-parse --show-toplevel)/git.bash" "$@"
+	fi
+}
+zle -N root_git_bash_push
+bindkey -M viins -r '^S'
+bindkey -M vicmd -r '^S'
+bindkey -M emacs -r '^S'
+bindkey -M viins '^S' root_git_bash_push
+bindkey -M vicmd '^S' root_git_bash_push
+bindkey -M emacs '^S' root_git_bash_push
 EOF
 )
 
@@ -630,21 +666,11 @@ andrewferrier/fzf-z
 EOF
 )
 
-#COC_CONFIG=$(cat << "EOF"
-#{
-#	"languageserver": {
-#		"kotlin": {
-#		    "command": "~/lsp/kotlin/server/bin/kotlin-language-server",
-#			"args": ["-Xmx2g", "-J-Xmx2g"],
-#	    	"filetypes": ["kotlin"],
-#			"initializationOptions": {
-#		      	"storagePath": "~/lsp/kotlin/caches"
-#		   	}
-#		}
-#	}
-#}
-#EOF
-#)
+TERMUX_PROPERTIES=$(cat << "EOF"
+volume-keys = volume
+extra-keys = [['','','','','','','KEYBOARD'],['ESC',{macro:"CTRL s",display:"PUSH"},{macro:"CTRL g",display:"FZFZ"},'HOME','UP','END','PGUP'],['TAB','CTRL','ALT','LEFT','DOWN','RIGHT','PGDN']]
+EOF
+)
 
 main "$@"
 
