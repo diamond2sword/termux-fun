@@ -381,7 +381,11 @@ set tabstop=4
 set shiftwidth=4
 
 "https://www.reddit.com/r/neovim/comments/131urrq/make_the_cursorline_in_neovim_semitransparent/
-nmap <C-g> :Files<CR>
+function! SearchFiles()
+	:tabe
+	:FZF
+endfunction
+nmap <C-g> :call SearchFiles() <CR>
 
 "https://github.com/neoclide/coc.nvim/issues/3784
 set t_Co=256
@@ -419,7 +423,7 @@ local opts = {silent = true, noremap = true, expr = true, replace_keycodes = fal
 keyset("i", "<TAB>", 'coc#pum#visible() ? coc#pum#next(1) : v:lua.check_back_space() ? "<TAB>" : coc#refresh()', opts)
 keyset("i", "<S-TAB>", [[coc#pum#visible() ? coc#pum#prev(1) : "\<C-h>"]], opts)
 keyset("i", "<cr>", [[coc#pum#visible() ? coc#pum#confirm() : "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"]], opts)
-keyset("i", "<c-j>", "<Plug>(coc-snippets-expand-jump)")
+keyset("i", "<c-j>", "<Plug>(coc-snippets-expand-jump)", {silent = true})
 keyset("i", "<c-space>", "coc#refresh()", {silent = true, expr = true})
 keyset("n", "[g", "<Plug>(coc-diagnostic-prev)", {silent = true})
 keyset("n", "]g", "<Plug>(coc-diagnostic-next)", {silent = true})
@@ -495,7 +499,7 @@ nnoremap <c-c> :call SetClipboardText()<CR>
 nnoremap <c-v> :call GetClipboardText()<CR>
 function! SetClipboardText()
 	let l:yankedText = @"
-	call system("(termux-clipboard-set <(cat \"EOF\"\n" . l:yankedText . "\nEOF\n); termux-toast \"Copied Yanked Text To Clipboard\") &> /dev/null &")
+	call system("((cat << \"EOF\" | termux-clipboard-set\n" . l:yankedText . "\nEOF\n);termux-toast \"Copied Yanked Text To Clipboard\") &> /dev/null &")
 endfunction
 function! GetClipboardText()
 	let l:clipboardText = system("termux-clipboard-get; termux-toast \"Copied Clipboard Text To Yanked Register\"")
@@ -510,14 +514,13 @@ set showbreak====\
 set wrap
 set linebreak
 
-
 " save vim or git keybind
 nnoremap <c-s> :call Save()<CR>
 function! Save()
 	:wa
 	echo system("(cd \"$(git rev-parse --show-toplevel)\"; bash git.bash push; termux-toast \"Git Pushed\")")
-endfunction
 	:e!
+endfunction
 EOF
 )
 
