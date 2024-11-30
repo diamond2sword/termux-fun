@@ -191,6 +191,7 @@ EOF
 			apt install python
 			python -m pip install jedi
 			pip install mypy
+			pip install panda
 		}
 		{
 			# print
