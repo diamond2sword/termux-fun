@@ -191,7 +191,23 @@ EOF
 			apt install python
 			python -m pip install jedi
 			pip install mypy
-			pip install panda
+			pkg i python-numpy
+			{
+				apt install clang
+				apt install libxml2
+				apt install libxslt
+				pip install cython
+				pkg install python-lxml
+				export CFLAGS="-Wno-incompatible-function-pointer-types -Wno-implicit-function-declaration"
+				pip install lxml
+				pip install python-docx
+			}
+			pip install roman
+			pip install groupdocs_conversion_cloud
+			pip install docxcompose
+			pip install pillow
+			pkg i tur-repo
+			pkg i python-pandas
 		}
 		{
 			# print
