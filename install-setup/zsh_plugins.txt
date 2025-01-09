@@ -1,0 +1,9 @@
+zsh-users/zsh-autosuggestions
+
+rupa/z
+agkozak/zsh-z
+
+ohmyzsh/ohmyzsh path:plugins/fzf
+ohmyzsh/ohmyzsh path:plugins/git
+
+andrewferrier/fzf-z

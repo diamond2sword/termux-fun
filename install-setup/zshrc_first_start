@@ -1,0 +1,4 @@
+#https://github.com/andrewferrier/fzf-z#pre-requisites
+export FZFZ_SCRIPT_PATH=~/.cache/antidote/https-COLON--SLASH--SLASH-github.com-SLASH-andrewferrier-SLASH-fzf-z
+mv "$HOME/z.sh" "$FZFZ_SCRIPT_PATH/z.sh"
+exit

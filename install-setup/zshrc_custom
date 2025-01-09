@@ -1,0 +1,43 @@
+#https://getantidote.github.io/install
+zsh_plugins=${ZDOTDIR:-~}/.zsh_plugins.zsh
+[[ -f ${zsh_plugins:r}.txt ]] || touch ${zsh_plugins:r}.txt
+fpath+=(${ZDOTDIR:-~}/.antidote)
+autoload -Uz $fpath[-1]/antidote
+if [[ ! $zsh_plugins -nt ${zsh_plugins:r}.txt ]]; then
+	(antidote bundle <${zsh_plugins:r}.txt >|$zsh_plugins)
+fi
+source $zsh_plugins
+
+#https://github.com/agkozak/zsh-z#general-observations
+autoload -U compinit; compinit
+zstyle ':completion:*' menu select
+
+#https://github.com/catppuccin/bat#usage
+export BAT_THEME=gruvbox-dark
+
+#https://github.com/andrewferrier/fzf-z#customizing-and-options
+export FZFZ_EXTRA_OPTS=" --border=sharp --preview-window=border-sharp --bind='pgdn:preview-down,pgup:preview-up'"
+export FZFZ_SUBDIR_LIMIT=0
+export FZF_BIN_PATH="fzf --bind='ctrl-z:abort'"
+
+#neovim alias
+alias vim='nvim'
+alias vi='vim'
+
+#git commands
+root_git_bash_push () {
+	root_git_bash push
+	return
+}
+root_git_bash () {
+	if git rev-parse --show-toplevel &> /dev/null; then
+		"$(git rev-parse --show-toplevel)/git.bash" "$@"
+	fi
+}
+zle -N root_git_bash_push
+bindkey -M viins -r '^S'
+bindkey -M vicmd -r '^S'
+bindkey -M emacs -r '^S'
+bindkey -M viins '^S' root_git_bash_push
+bindkey -M vicmd '^S' root_git_bash_push
+bindkey -M emacs '^S' root_git_bash_push
