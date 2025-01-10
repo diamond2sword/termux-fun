@@ -62,20 +62,31 @@ main () {
        	apt install tree
        	apt install shellcheck
 		apt install nodejs
+			
+		# markdown
+		pkg install glow
+		npm install -g markserv
+		
+		# bat
+		apt install bat
+		
+		#openssh
+		apt install openssh
 
-		#git
+		#github
 		apt install git
+		pkg install gh
 	}
 	
-	#neovim init files
-	mkdir -p ~/.config/nvim/lua/lsp
-	mkdir -p ~/.config/nvim/after/syntax/sh
-	echo "$INIT_VIM" > ~/.config/nvim/init.vim
-	echo -E "$VIM_SH_HEREDOC_HIGHLIGHTING" > ~/.config/nvim/after/syntax/sh/heredoc-sh.vim
-		
-	
+	#neovim and plugins
 	{
 		{
+			#neovim init files
+			mkdir -p ~/.config/nvim/lua/lsp
+			mkdir -p ~/.config/nvim/after/syntax/sh
+			echo "$INIT_VIM" > ~/.config/nvim/init.vim
+			echo -E "$VIM_SH_HEREDOC_HIGHLIGHTING" > ~/.config/nvim/after/syntax/sh/heredoc-sh.vim
+
 			#neovim plugins
 			nvim +'PlugInstall --sync' +qa
 			nvim +'PlugClean --sync' +qa
@@ -91,33 +102,11 @@ main () {
 			for coc_extension in "${coc_extension_list[@]}"; do
 				force_coc_install "$coc_extension"
 			done
+
+			#configure coc.nvim
 			echo "$COC_CONFIG" > ~/.config/nvim/coc-settings.json
 		}
 	}
-
-
-	yes | {
-		#bat
-		apt install bat
-	}
-
-#	#for kotlin
-#	{
-#		#gradle
-#		yes | {
-#			apt install gradle
-#		}
-#
-#		(
-#			#git
-#			git_bash_clone project	
-#			apt install openssh
-#
-#			#kotlin project
-#			cd "$HOME/project"
-#			bash gradle.bash version
-#		)
-#	}
 
 	yes | {
 		#termux repo
@@ -179,8 +168,8 @@ EOF
 		#study
 		git_bash_clone study
 
-		git_bash_clone bash-fun
-		git_bash_clone java-fun
+#		git_bash_clone bash-fun
+#		git_bash_clone java-fun
 
 		#coding stuffs
 		{
@@ -192,26 +181,34 @@ EOF
 			npm install -g http-server
 			git_bash_clone clay-fun
 		}
-		{
-			# markdown
-			pkg install glow
-			npm install -g markserv
-		}
-		{
-			# assembly
-			git_bash_clone asm-fun
-			apt install binutils
-		}
-		{
-			#github
-			pkg install gh
-		}
-		{
-			# python
-			git_bash_clone python-fun
-			apt install python
+#		{
+#			# assembly
+#			git_bash_clone asm-fun
+#			apt install binutils
+#		}
+#		#kotlin with gradle
+#		{
+#			#gradle
+#			yes | {
+#				apt install gradle
+#			}
+#
+#			(
+#				#git
+#				git_bash_clone project	
+#
+#				#kotlin project
+#				cd "$HOME/project"
+#				bash gradle.bash version
+#			)
+#		}
+
+#		{
+#			# python
+#			git_bash_clone python-fun
+#			apt install python
+#			pip install mypy
 #BUG			python -m pip install jedi
-			pip install mypy
 #			{
 #				#pythondocx
 #				pkg install tur-repo #for pandss?
@@ -233,13 +230,13 @@ EOF
 #				pip install roman
 #				pip install titlecase
 #			}
-		}
-		{
-			# print
-			git_bash_clone print-shop
-			apt install file shfmt
-			apt install imagemagick pandoc pdf2svg pdftk qpdf
-		}
+#		}
+#		{
+#			# print
+#			git_bash_clone print-shop
+#			apt install file shfmt
+#			apt install imagemagick pandoc pdf2svg pdftk qpdf
+#		}
 	}
 }
 

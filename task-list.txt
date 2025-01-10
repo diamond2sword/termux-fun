@@ -6,4 +6,9 @@ Tasks Abandoned
 Tasks Being Done
 
 Tasks To Be Done
-	
+	improve git.bash security
+		try using `gh`
+		change SSH public key
+	improve install-setup.bash
+		reinstall setup
+
