@@ -42,3 +42,8 @@ expect << EOF
 		eof
 	}
 EOF
+
+cat ~/.ssh/id_ed25519.pub
+
+gh ssh-key add ~/.ssh/id_ed25519.pub -t "termux"
+
