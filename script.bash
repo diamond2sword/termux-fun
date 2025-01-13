@@ -3,17 +3,8 @@ passphrase=$(cat "$HOME/ssh-key-passphrase.txt")
 email="diamond2sword@gmail.com"
 system="ed25519"
 
-delete_old_ssh_keys () {
-	list=$(gh ssh-key list)
-	echo "$list" |
-	grep -v "$(echo "$list" | awk '{print $4}' | sort | tail -n 1)" |
-	awk '{print $5}' | xargs -I {} gh ssh-key delete {} --yes
-}
-
 gh auth logout
 gh auth login -p ssh -h github.com --skip-ssh-key -w -s read:gpg_key,admin:public_key,admin:ssh_signing_key
-
-delete_old_ssh_keys
 
 rm -rf ~/.ssh
 
@@ -57,5 +48,30 @@ EOF
 
 cat ~/.ssh/id_ed25519.pub
 
+{
+	#delete_all_ssh_keys
+	list=$(gh ssh-key list)
+	echo "$list" |
+	#grep -v "$(echo "$list" | awk '{print $4}' | sort | tail -n 1)" |
+	awk '{print $5}' | xargs -I {} gh ssh-key delete {} --yes
+}
+
 gh ssh-key add ~/.ssh/id_ed25519.pub -t "termux"
 
+
+
+
+
+
+
+
+
+
+
+delete_ssh_keys_except_last()
+{
+	list=$(gh ssh-key list)
+	echo "$list" |
+	grep -v "$(echo "$list" | awk '{print $4}' | sort | tail -n 1)" |
+	awk '{print $5}' | xargs -I {} gh ssh-key delete {} --yes
+}
