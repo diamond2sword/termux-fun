@@ -4,7 +4,17 @@ email="diamond2sword@gmail.com"
 system="ed25519"
 
 gh auth logout
-gh auth login -p ssh -h github.com --skip-ssh-key -w -s read:gpg_key,admin:public_key,admin:ssh_signing_key
+
+expect << "EOF"
+	spawn gh auth login -p ssh -h github.com --skip-ssh-key -w -s read:gpg_key,admin:public_key,admin:ssh_signing_key
+	expect {
+		-re {First copy your one-time code: (.{4}-.{4})} {
+			system "Captured Value: $expect_out(1, string)"
+			exp_continue
+		}
+		eof
+	}
+EOF
 
 rm -rf ~/.ssh
 
