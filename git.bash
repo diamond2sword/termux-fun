@@ -118,6 +118,7 @@ declare_git_commands () {
 	}
 
 	push () {
+		[[ $1 ]] && COMMIT_NAME="$1"
 		cd "$REPO_PATH" || exit
 		git add .
 		git commit -m "$COMMIT_NAME"
