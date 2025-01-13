@@ -3,6 +3,9 @@ passphrase=$(cat "$HOME/ssh-key-passphrase.txt")
 email="diamond2sword@gmail.com"
 system="ed25519"
 
+gh auth logout
+gh auth login -p ssh -h github.com --skip-ssh-key -w -s read:gpg_key,admin:public_key
+
 rm -rf ~/.ssh
 
 expect << EOF
