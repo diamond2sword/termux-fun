@@ -257,9 +257,9 @@ force_coc_install () {
 
 INIT_VIM=$(cat './init.vim')
 VIM_SH_HEREDOC_HIGHLIGHTING=$(cat './heredoc-sh.vim')
-ZSHRC_CUSTOM=$(cat './.zshrc_custom')
-ZSHRC_FIRST_START=$(cat './.zshrc_first_start')
-ZSH_PLUGINS_TXT=$(cat './.zsh_plugins.txt')
+ZSHRC_CUSTOM=$(cat './zshrc_custom')
+ZSHRC_FIRST_START=$(cat './zshrc_first_start')
+ZSH_PLUGINS_TXT=$(cat './zsh_plugins.txt')
 TERMUX_PROPERTIES=$(cat './termux.properties')
 
 main "$@"

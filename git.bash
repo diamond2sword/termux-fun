@@ -18,7 +18,7 @@ declare_strings () {
 	THIS_FILE_NAME="git.bash"
 	PROJECT_NAME="project"
 	SSH_DIR_NAME=".ssh"
-	SSH_KEY_FILE_NAME="id_rsa"
+	SSH_KEY_FILE_NAME="id_ed25519"
 	ROOT_PATH="$HOME"
 	REPO_PATH="$ROOT_PATH/$REPO_NAME"
 	SSH_TRUE_DIR="$ROOT_PATH/$SSH_DIR_NAME"
@@ -134,8 +134,6 @@ declare_git_commands () {
 }
 
 add_ssh_key_to_ssh_agent () {
-	mkdir -p "$SSH_TRUE_DIR"
-	cp -f $(eval echo "$SSH_REPO_DIR/"*) "$SSH_TRUE_DIR"
 	chmod 600 "$SSH_TRUE_DIR/$SSH_KEY_FILE_NAME"
 	eval "$(ssh-agent -s)"
 	ssh_auth_eval ssh-add "$SSH_TRUE_DIR/$SSH_KEY_FILE_NAME"

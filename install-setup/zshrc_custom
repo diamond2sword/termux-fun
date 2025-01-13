@@ -22,7 +22,7 @@ export FZF_BIN_PATH="fzf --bind='ctrl-z:abort'"
 
 #neovim alias
 alias vim='nvim'
-alias vi='vim'
+alias vi='nvim'
 
 #git commands
 root_git_bash_push () {
@@ -34,6 +34,7 @@ root_git_bash () {
 		"$(git rev-parse --show-toplevel)/git.bash" "$@"
 	fi
 }
+alias git_bash='root_git_bash'
 zle -N root_git_bash_push
 bindkey -M viins -r '^S'
 bindkey -M vicmd -r '^S'
