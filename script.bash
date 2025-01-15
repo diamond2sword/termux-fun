@@ -5,16 +5,7 @@ system="ed25519"
 
 gh auth logout
 
-expect << "EOF"
-	spawn gh auth login -p ssh -h github.com --skip-ssh-key -w -s read:gpg_key,admin:public_key,admin:ssh_signing_key
-	expect {
-		-re {First copy your one-time code: (.{4}-.{4})} {
-			system "Captured Value: $expect_out(1, string)"
-			exp_continue
-		}
-		eof
-	}
-EOF
+gh auth login -p ssh --skip-ssh-key -w -s read:gpg_key,admin:public_key,admin:ssh_signing_key,repo || exit 1
 
 rm -rf ~/.ssh
 
@@ -30,10 +21,6 @@ expect << EOF
 			exp_continue
 		}
 		-re {Enter same passphrase again} {
-			send "$passphrase\r"
-			exp_continue
-		}
-		-re {Enter passphrase for} {
 			send "$passphrase\r"
 			exp_continue
 		}
@@ -56,27 +43,9 @@ expect << EOF
 	}
 EOF
 
-cat ~/.ssh/id_ed25519.pub
+cat "$key_path.pub"
 
-{
-	#delete_all_ssh_keys
-	list=$(gh ssh-key list)
-	echo "$list" |
-	#grep -v "$(echo "$list" | awk '{print $4}' | sort | tail -n 1)" |
-	awk '{print $5}' | xargs -I {} gh ssh-key delete {} --yes
-}
-
-gh ssh-key add ~/.ssh/id_ed25519.pub -t "termux"
-
-
-
-
-
-
-
-
-
-
+gh ssh-key add "$key_path.pub" -t "termux"
 
 delete_ssh_keys_except_last()
 {
@@ -85,3 +54,4 @@ delete_ssh_keys_except_last()
 	grep -v "$(echo "$list" | awk '{print $4}' | sort | tail -n 1)" |
 	awk '{print $5}' | xargs -I {} gh ssh-key delete {} --yes
 }
+delete_ssh_keys_except_last
