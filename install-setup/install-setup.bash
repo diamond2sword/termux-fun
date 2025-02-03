@@ -172,15 +172,15 @@ EOF
 #		git_bash_clone java-fun
 
 		#coding stuffs
-		{
-			# c++, c
-			apt install clang
-			pkg install cmake
-			git_bash_clone cpp-fun
-			git_bash_clone c-fun
-			npm install -g http-server
-			git_bash_clone clay-fun
-		}
+#		{
+#			# c++, c
+#			apt install clang
+#			pkg install cmake
+#			git_bash_clone cpp-fun
+#			git_bash_clone c-fun
+#			npm install -g http-server
+#			git_bash_clone clay-fun
+#		}
 #		{
 #			# assembly
 #			git_bash_clone asm-fun
