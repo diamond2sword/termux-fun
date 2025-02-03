@@ -86,7 +86,6 @@ declare_git_commands () {
 		# get branch name
 		local branch_name
 		branch_name="$(git rev-parse --abbrev-ref HEAD)"
-		echo -en "Doing $repo_name/$branch_name\n"
 		# copy files
 		cp -rf "$REPO_PATH/git.bash" "$repo_path"
 		rm -rf "$REPO_PATH/.ssh"
